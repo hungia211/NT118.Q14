@@ -1,23 +1,32 @@
 import 'package:flutter/material.dart';
-import 'views/home/home_page.dart';
+import 'views/auth/login_page.dart'; // IMPORT LOGIN PAGE
 
 void main() {
-  runApp(const TodoApp());
+  runApp(const MyApp());
 }
 
-class TodoApp extends StatelessWidget {
-  const TodoApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Todo List',
       debugShowCheckedModeBanner: false,
+
+      //  GLOBAL THEME APP
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
+        fontFamily: "Inter",   // DÙNG FONT INTER TOÀN APP
+
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF2E7D32),  // MÀU XANH LÁ NHẸ
+        ),
+
+        scaffoldBackgroundColor: const Color(0xFFF9FEFB), // NỀN MẶC ĐỊNH
       ),
-      home: HomePage(),
+
+      // ✨ TRANG ĐẦU TIÊN KHI APP CHẠY
+      home: LoginPage(),
     );
   }
 }
