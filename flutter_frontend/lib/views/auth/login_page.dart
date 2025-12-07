@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:todo_app/views/home/home_page.dart';
 import '../../widgets/black_button.dart';
 import '../../widgets/white_button.dart';
 import '../../widgets/custom_textfield.dart';
@@ -102,7 +103,14 @@ class LoginPage extends StatelessWidget {
                   // LOGIN BUTTON
                   BlackButton(
                     text: "Đăng nhập",
-                    onPressed: () {},
+                    // onPressed: (){},
+                    // Chỉ test điều hướng thử ở chỗ này thôi
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => HomePage()),
+                      );
+                    },
                   ),
 
                   const SizedBox(height: 8),
