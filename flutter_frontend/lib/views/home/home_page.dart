@@ -1,24 +1,94 @@
 import 'package:flutter/material.dart';
+import '../../models/task.dart';
+import '../../widgets/black_button.dart';
+import '../../widgets/task_card.dart';
+import '../../controllers/task_controller.dart';
+import '../../services/task_service.dart';
+import 'dart:async';
+import '../../services/book_service.dart';
+import '../../widgets/book_card.dart';
+import 'package:rxdart/rxdart.dart';
 
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+import '../tasks/task_list_page.dart';
+
+class HomePage extends StatefulWidget {
+  final String username;
+  const HomePage({super.key, this.username = "User"});
+
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  final TaskService taskService = TaskService();
+  final TaskController taskController = TaskController();
+
+  final BookService bookService = BookService();
+
+  // các từ khóa đề xuất
+  final List<String> vietnamKeywords = [
+    "quản lý thời gian",
+    "làm việc hiệu quả",
+    "tối ưu hiệu suất",
+  ];
 
   @override
   Widget build(BuildContext context) {
+    double progress = 0.5; // 50%
+
     return Scaffold(
       backgroundColor: Colors.grey[100],
 
       // BOTTOM NAVIGATION
-      bottomNavigationBar: BottomNavigationBar(
-        selectedItemColor: Colors.green,
-        unselectedItemColor: Colors.grey,
-        currentIndex: 0,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.add_circle, size: 36), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),
-        ],
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 10,
+              offset: Offset(0, -3),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // HOME (selected)
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.green.shade100,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.home, color: Colors.green),
+            ),
+
+            // GRID
+            const Icon(Icons.grid_view, size: 28, color: Colors.black),
+
+            // BIG PLUS BUTTON
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: const BoxDecoration(
+                color: Colors.green,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.add, size: 24, color: Colors.white),
+            ),
+
+            // CIRCLE ICON
+            Icon(Icons.circle_outlined, size: 30, color: Colors.black),
+
+            // CALENDAR
+            const Icon(Icons.calendar_today, size: 28, color: Colors.black),
+          ],
+        ),
       ),
 
       body: SafeArea(
@@ -27,7 +97,6 @@ class HomePage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-
               const SizedBox(height: 10),
 
               // HEADER
@@ -35,7 +104,7 @@ class HomePage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Icon(Icons.notifications, size: 36),
-                  const SizedBox(width: 16),   // ← thêm padding trái cho Search
+                  const SizedBox(width: 16), // ← thêm padding trái cho Search
                   Expanded(
                     child: Container(
                       height: 40,
@@ -48,220 +117,447 @@ class HomePage extends StatelessWidget {
                         children: [
                           Icon(Icons.search, color: Colors.grey),
                           SizedBox(width: 8),
-                          Text(
-                            "Search",
-                            style: TextStyle(color: Colors.grey),
-                          ),
+                          Text("Search", style: TextStyle(color: Colors.grey)),
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(width: 16),   // ← thêm padding phải giữa Search và Avatar
+
+                  const SizedBox(
+                    width: 16,
+                  ), // ← thêm padding phải giữa Search và Avatar
+
                   CircleAvatar(
                     radius: 22,
-                    backgroundImage: AssetImage("assets/images/avatar.jpg"),
-                  )
+                    backgroundImage: AssetImage("assets/images/ava.png"),
+                  ),
                 ],
               ),
 
               const SizedBox(height: 20),
 
               // WELCOME TEXT
-              const Text(
-                "Keep Striving Juan!",
-                style: TextStyle(
-                  fontSize: 26,
+              Text(
+                "Chào mừng ${widget.username} đã quay trở lại!",
+                style: const TextStyle(
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const Text(
-                "Today's Task",
-                style: TextStyle(fontSize: 18, color: Colors.grey),
+              const SizedBox(height: 8),
+
+              const Center(
+                child: Text(
+                  "Danh sách công việc hôm nay!",
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ),
-              const Text(
-                "February 10, 2026",
-                style: TextStyle(fontSize: 14, color: Colors.grey),
+              const SizedBox(height: 8),
+
+              Center(
+                child: StreamBuilder<DateTime>(
+                  stream: Stream.periodic(
+                    const Duration(seconds: 20),
+                    (_) => DateTime.now(),
+                  ).startWith(DateTime.now()),
+                  builder: (context, snapshot) {
+                    final now = snapshot.data ?? DateTime.now();
+
+                    return Text(
+                      getVietnameseDateTime(now),
+                      style: const TextStyle(fontSize: 14, color: Colors.grey),
+                      textAlign: TextAlign.center,
+                    );
+                  },
+                ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 30),
 
               // TASK CARD
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.green[300],
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            "5:45 AM",
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                          const Text(
-                            "Workout Great Job!",
-                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 10),
-                          ElevatedButton(
-                            onPressed: () {},
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.black,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
+              FutureBuilder(
+                future: taskService.getTasks(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  final tasks = snapshot.data!;
+                  final todayTasks = taskController.filterTasksForToday(tasks);
+                  final firstTask = taskController.getFirstTaskOfToday(
+                    todayTasks,
+                  );
+
+                  if (firstTask == null) {
+                    return const Text("Không có công việc hôm nay 😴");
+                  }
+
+                  return Column(
+                    children: [
+                      LayeredTaskCard(context, firstTask),
+
+                      const SizedBox(height: 15),
+
+                      BlackButton(
+                        text: "XEM TẤT CẢ",
+                        width: 130,
+                        height: 40,
+                        fontSize: 12,
+                        borderRadius: 40,
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => TaskListPage(tasks: todayTasks),
                             ),
-                            child: const Text("VIEW ALL"),
-                          )
-                        ],
+                          );
+                        },
                       ),
-                    ),
+                    ],
+                  );
+                },
+              ),
 
-                    Image.asset(
-                      "assets/images/logo.png",
-                      width: 110,
-                    )
-                  ],
+              const SizedBox(height: 30),
+
+              // PROGRESS TITLE
+              const Center(
+                child: Text(
+                  "Tiến độ công việc hôm nay!",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
 
-              // PROGRESS
-              const Text(
-                "Your progress for today",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              // CUSTOM PROGRESS BAR
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final fullWidth = constraints.maxWidth; // chiều rộng thật
+                  final progressWidth = fullWidth * progress;
+
+                  return Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Nền xám
+                      Container(
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(30),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.15),
+                              blurRadius: 10,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Thanh xanh
+                      Positioned(
+                        left: 0,
+                        child: Container(
+                          height: 28,
+                          width: progressWidth,
+                          decoration: BoxDecoration(
+                            color: Colors.green,
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                        ),
+                      ),
+
+                      // Text %
+                      Text(
+                        "${(progress * 100).toInt()}%",
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
 
-              const SizedBox(height: 6),
-
-              LinearProgressIndicator(
-                value: 0.35,
-                backgroundColor: Colors.grey[300],
-                color: Colors.green,
-                minHeight: 10,
-              ),
-
-              const SizedBox(height: 20),
+              const SizedBox(height: 60),
 
               // DISCOVER BANNER
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.greenAccent, Colors.blueAccent],
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            "Discover new things!",
-                            style: TextStyle(
-                                fontSize: 20, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 10),
-                          ElevatedButton(
-                            onPressed: () {},
-                            child: const Text("START"),
-                          )
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  // ---- MAIN CARD ----
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.fromLTRB(20, 20, 10, 10),
+                    height: 140, // mỏng hơn theo yêu cầu
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Color(0xFF7DE9B6), // xanh nhạt phía trên
+                          Colors.white, // trắng phía dưới
                         ],
                       ),
+                      borderRadius: BorderRadius.circular(25),
                     ),
-                    Image.asset("assets/images/discover.png", width: 100),
-                  ],
-                ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Khám phá điều mới!",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          "Bạn đã sẵn sàng chưa?",
+                          style: TextStyle(fontSize: 12, color: Colors.black54),
+                        ),
+                        const SizedBox(height: 8),
+
+                        // BUTTON
+                        ElevatedButton(
+                          onPressed: () {},
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.black,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 8,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                          child: const Text(
+                            "BẮT ĐẦU",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // ---- IMAGE FLOATING (NỔI LÊN, SANG PHẢI) ----
+                  Positioned(
+                    top: -60, // nổi lên hơn
+                    right: 0, // đẩy sang phải nhiều hơn
+                    child: SizedBox(
+                      width: 200,
+                      height: 200,
+                      child: Image.asset(
+                        "assets/images/discover.png",
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                ],
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 30),
 
               // BOOKS SECTION
               const Text(
-                "Recommended Books:",
+                "Những cuốn sách bạn nên đọc:",
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
 
               const SizedBox(height: 10),
 
-              SizedBox(
-                height: 140,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  children: [
-                    buildBook("assets/images/book1.png"),
-                    buildBook("assets/images/book2.png"),
-                    buildBook("assets/images/book3.png"),
-                    buildBook("assets/images/book4.png"),
-                  ],
+              FutureBuilder(
+                future: bookService.fetchBooks(
+                  vietnamKeywords[DateTime.now().second %
+                      vietnamKeywords.length],
                 ),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const SizedBox(
+                      height: 140,
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
+
+                  if (!snapshot.hasData) {
+                    return const Text("Không thể tải sách 😢");
+                  }
+
+                  final books = snapshot.data as List;
+
+                  return SizedBox(
+                    height: 210,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: books.length,
+                      itemBuilder: (context, index) {
+                        final book = books[index]["volumeInfo"];
+
+                        final image = book["imageLinks"]?["thumbnail"];
+
+                        final title = book["title"] ?? "No title";
+
+                        String fixUrl(String? url) {
+                          if (url == null) return "https://books.google.com/";
+                          if (url.startsWith("http://")) {
+                            return url.replaceFirst("http://", "https://");
+                          }
+                          return url;
+                        }
+
+                        print("🔗 Book link: ${fixUrl(book["infoLink"])}");
+
+                        return BookCard(
+                          imageUrl: image,
+                          title: title,
+                          previewUrl: fixUrl(
+                            book["infoLink"] ??
+                                book["previewLink"] ??
+                                book["canonicalVolumeLink"],
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
               ),
 
               const SizedBox(height: 20),
 
-              // WHY USE APP
-              const Center(
+              // WHY USE APP SECTION
+              Center(
                 child: Column(
-                  children: [
-                    Icon(Icons.stacked_line_chart, size: 40),
-                    SizedBox(height: 10),
-                    Text(
-                      "Productive means Progress",
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(height: 6),
-                    Text(
-                      "This app provides tools to organize, prioritize, and manage your discipline.",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  ],
-                ),
-              ),
+                  children: const [
+                    Icon(Icons.stacked_line_chart, size: 45),
+                    SizedBox(height: 12),
 
-              const SizedBox(height: 20),
-
-              // QUOTE
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Column(
-                  children: [
-                    const Text(
-                      "“Always remember, your focus determines your reality”",
-                      textAlign: TextAlign.center,
+                    Text(
+                      "Hiệu suất tạo nên sự tiến bộ",
                       style: TextStyle(
-                        fontSize: 16,
-                        fontStyle: FontStyle.italic,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        CircleAvatar(
-                          backgroundImage: AssetImage("assets/images/avatar2.jpg"),
-                        ),
-                        const SizedBox(width: 10),
-                        const Text("Tyler Durden"),
-                      ],
-                    )
+
+                    SizedBox(height: 12),
+
+                    Image(
+                      image: AssetImage("assets/images/performance.png"),
+                    ),
+
+                    SizedBox(height: 8),
+
+                    Text(
+                      "Tại sao nên sử dụng ứng dụng này?",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
+
+                    SizedBox(height: 8),
+
+                    Text(
+                      "Ứng dụng cung cấp các công cụ để bạn tổ chức, ưu tiên "
+                      "và quản lý công việc. Đồng thời giúp bạn duy trì sự tập trung "
+                      "và hoàn thành từng mục trong danh sách của mình.",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 13, color: Colors.grey),
+                    ),
                   ],
                 ),
               ),
+
+              const SizedBox(height: 28),
+
+              // QUOTE SECTION
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // QUOTE TEXT
+                  SizedBox(
+                    width: double.infinity,
+                    child: RichText(
+                      textAlign: TextAlign.center,
+                      text: TextSpan(
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontStyle: FontStyle.italic,
+                          color: Colors.black87,
+                          height: 1.5,
+                        ),
+                        children: const [
+                          TextSpan(text: "“ "),
+                          TextSpan(text: "Không có việc gì khó,\n"),
+                          TextSpan(text: "Chỉ sợ lòng "),
+                          TextSpan(
+                            text: "KHÔNG BỀN",
+                            style: TextStyle(
+                              color: Colors.green,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          TextSpan(text: ". "),
+                          TextSpan(text: "”"),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // AVATAR (tự căn giữa vì Column center)
+                  const CircleAvatar(
+                    radius: 36,
+                    backgroundImage: AssetImage("assets/images/ChuTichHCM.jpg"),
+                    backgroundColor: Colors.transparent,
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // AUTHOR NAME
+                  const Text(
+                    "Hồ Chí Minh",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+
+                  const SizedBox(height: 4),
+
+                  // AUTHOR ROLE
+                  const Text(
+                    "Chủ tịch nước Việt Nam",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+
 
               const SizedBox(height: 30),
             ],
@@ -270,6 +566,72 @@ class HomePage extends StatelessWidget {
       ),
     );
   }
+}
+
+Widget LayeredTaskCard(BuildContext context, Task task) {
+  return SizedBox(
+    height: 140,
+    child: Stack(
+      clipBehavior: Clip.none,
+      children: [
+        // SHADOW 3D DƯỚI ĐÁY (nằm dưới tất cả)
+        Positioned(
+          bottom: 12,
+          left: 20,
+          right: -4,
+          child: Container(
+            height: 138,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(40),
+                topRight: Radius.circular(30),
+                bottomLeft: Radius.circular(30),
+                bottomRight: Radius.circular(50),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.18),
+                  spreadRadius: 1,
+                  blurRadius: 4,
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        Positioned(
+          right: 0,
+          top: -12,
+          child: _layer(context, Colors.red.shade300),
+        ),
+
+        Positioned(
+          right: 4,
+          top: -8,
+          child: _layer(context, Colors.orange.shade300),
+        ),
+
+        Positioned(
+          right: 8,
+          top: -4,
+          child: _layer(context, Colors.green.shade800),
+        ),
+
+        Positioned(top: 0, left: 8, right: 12, child: TaskCard(task: task)),
+      ],
+    ),
+  );
+}
+
+Widget _layer(BuildContext context, Color color) {
+  return Container(
+    height: 120,
+    width: MediaQuery.of(context).size.width - 60,
+    decoration: BoxDecoration(
+      color: color,
+      borderRadius: BorderRadius.circular(30),
+    ),
+  );
 }
 
 Widget buildBook(String asset) {
@@ -282,4 +644,39 @@ Widget buildBook(String asset) {
     ),
     child: Image.asset(asset, fit: BoxFit.cover),
   );
+}
+
+String getVietnameseDateTime(DateTime now) {
+  const weekdays = [
+    "Thứ Hai",
+    "Thứ Ba",
+    "Thứ Tư",
+    "Thứ Năm",
+    "Thứ Sáu",
+    "Thứ Bảy",
+    "Chủ Nhật",
+  ];
+
+  const months = [
+    "tháng 1",
+    "tháng 2",
+    "tháng 3",
+    "tháng 4",
+    "tháng 5",
+    "tháng 6",
+    "tháng 7",
+    "tháng 8",
+    "tháng 9",
+    "tháng 10",
+    "tháng 11",
+    "tháng 12",
+  ];
+
+  final weekdayName = weekdays[(now.weekday - 1) % 7];
+  final monthName = months[(now.month - 1) % 12];
+
+  String hour = now.hour.toString().padLeft(2, '0');
+  String minute = now.minute.toString().padLeft(2, '0');
+
+  return "$hour:$minute - $weekdayName, ${now.day} $monthName ${now.year}";
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'views/auth/login_page.dart'; // IMPORT LOGIN PAGE
+import 'package:intl/date_symbol_data_local.dart';
+
 
 void main() {
   runApp(const MyApp());
@@ -25,7 +27,7 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFFF9FEFB), // NỀN MẶC ĐỊNH
       ),
 
-      // ✨ TRANG ĐẦU TIÊN KHI APP CHẠY
+      // TRANG ĐẦU TIÊN KHI APP CHẠY
       home: LoginPage(),
     );
   }

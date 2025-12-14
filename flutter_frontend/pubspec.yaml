@@ -11,6 +11,11 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
+  http: ^1.2.0
+  intl: ^0.19.0
+  rxdart: ^0.28.0
+  url_launcher: ^6.3.2
+  webview_flutter: ^4.13.0
 
 dev_dependencies:
   flutter_test:
@@ -22,6 +27,9 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/mock/tasks.json
+    - assets/images/default_book.png
+
 
   fonts:
     - family: Inter
