@@ -1,16 +1,24 @@
 import '../models/task.dart';
 import '../services/task_service.dart';
 
+
 class TaskController {
-  final TaskService _service = TaskService();
+  // Lọc task theo ngày hôm nay
+  List<Task> filterTasksForToday(List<Task> tasks) {
+    final now = DateTime.now();
 
-  List<Task> get tasks => _service.getTasks();
+    return tasks.where((task) =>
+    task.deadline.year == now.year &&
+        task.deadline.month == now.month &&
+        task.deadline.day == now.day
+    ).toList();
+  }
 
-  void addTask(String title) {
-    final newTask = Task(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      title: title,
-    );
-    _service.addTask(newTask);
+  // Lấy task đầu tiên trong danh sách (ưu tiên deadline sớm nhất)
+  Task? getFirstTaskOfToday(List<Task> tasks) {
+    if (tasks.isEmpty) return null;
+
+    tasks.sort((a, b) => a.deadline.compareTo(b.deadline));
+    return tasks.first;
   }
 }
