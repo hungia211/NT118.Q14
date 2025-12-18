@@ -1,24 +1,84 @@
 import '../models/task.dart';
-import '../services/task_service.dart';
 
 
 class TaskController {
-  // Lọc task theo ngày hôm nay
+  /// Lấy tất cả task của hôm nay
   List<Task> filterTasksForToday(List<Task> tasks) {
     final now = DateTime.now();
 
-    return tasks.where((task) =>
-    task.deadline.year == now.year &&
-        task.deadline.month == now.month &&
-        task.deadline.day == now.day
-    ).toList();
+    final startOfDay = DateTime(now.year, now.month, now.day);
+    final endOfDay = startOfDay.add(const Duration(days: 1));
+
+    return tasks.where((task) {
+      // Task bắt đầu trong hôm nay
+      final startsToday =
+          task.startTime.isAfter(startOfDay) &&
+              task.startTime.isBefore(endOfDay);
+
+      // Task bắt đầu hôm trước nhưng kéo dài sang hôm nay
+      final overlapsToday =
+          task.startTime.isBefore(endOfDay) &&
+              task.endTime.isAfter(startOfDay);
+
+      return startsToday || overlapsToday;
+    }).toList();
   }
 
-  // Lấy task đầu tiên trong danh sách (ưu tiên deadline sớm nhất)
-  Task? getFirstTaskOfToday(List<Task> tasks) {
-    if (tasks.isEmpty) return null;
+  /// Task sắp diễn ra nhất (upcoming)
+  Task? getNextTask(List<Task> tasks) {
+    final now = DateTime.now();
 
-    tasks.sort((a, b) => a.deadline.compareTo(b.deadline));
-    return tasks.first;
+    final upcomingTasks = tasks
+        .where((task) => task.startTime.isAfter(now))
+        .toList();
+
+    if (upcomingTasks.isEmpty) return null;
+
+    upcomingTasks.sort((a, b) => a.startTime.compareTo(b.startTime));
+    return upcomingTasks.first;
+  }
+
+
+  /// Task đang diễn ra
+  Task? getCurrentTask(List<Task> tasks) {
+    final now = DateTime.now();
+
+    try {
+      return tasks.firstWhere(
+            (task) =>
+        now.isAfter(task.startTime) &&
+            now.isBefore(task.endTime),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+
+  /// Cập nhật status tự động theo thời gian
+  List<Task> autoUpdateStatus(List<Task> tasks) {
+    final now = DateTime.now();
+
+    return tasks.map((task) {
+      // Nếu đã done → không động
+      if (task.status == 'done') return task;
+
+      // Chưa tới giờ
+      if (now.isBefore(task.startTime)) {
+        return task.copyWith(status: 'not-started');
+      }
+
+      // Đang làm
+      if (now.isAfter(task.startTime) && now.isBefore(task.endTime)) {
+        return task.copyWith(status: 'in-progress');
+      }
+
+      // Quá giờ mà chưa xong
+      if (now.isAfter(task.endTime)) {
+        return task.copyWith(status: 'failed');
+      }
+
+      return task;
+    }).toList();
   }
 }

@@ -4,13 +4,80 @@
     "title": "Tập thể dục",
     "description": "Hoàn thành những bài tập thể dục buổi sáng",
     "status": "done",
-    "deadline": "2025-12-14T05:45:00"
+    "category": "health",
+    "startTime": "2025-12-18T05:45:00",
+    "durationMinutes": 30
   },
   {
     "id": "2",
     "title": "Team Meeting",
     "description": "Thảo luận về dự án mới",
     "status": "in-progress",
-    "deadline": "2025-12-14T10:30:00"
+    "category": "work",
+    "startTime": "2025-12-18T10:30:00",
+    "durationMinutes": 90
+  },
+  {
+    "id": "3",
+    "title": "Học Flutter",
+    "description": "Làm TaskCard UI",
+    "status": "failed",
+    "category": "study",
+    "startTime": "2025-12-18T08:00:00",
+    "durationMinutes": 120
+  },
+  {
+    "id": "4",
+    "title": "Nghỉ ngơi",
+    "description": "Thư giản sau giờ làm việc",
+    "status": "not-started",
+    "category": "relax",
+    "startTime": "2025-12-18T11:45:00",
+    "durationMinutes": 30
+  },
+  {
+    "id": "5",
+    "title": "Nấu ăn tối",
+    "description": "Chuẩn bị bữa tối cho gia đình",
+    "status": "not-started",
+    "category": "cook",
+    "startTime": "2025-12-18T18:00:00",
+    "durationMinutes": 60
+  },
+  {
+    "id": "6",
+    "title": "Xem phim",
+    "description": "Xem những bộ phim mới",
+    "status": "not-started",
+    "category": "relax",
+    "startTime": "2025-12-18T22:00:00",
+    "durationMinutes": 120
+  },
+  {
+    "id": "7",
+    "title": "Xem phim",
+    "description": "Xem những bộ phim mới",
+    "status": "not-started",
+    "category": "relax",
+    "startTime": "2025-12-16T22:00:00",
+    "durationMinutes": 120
+  },
+  {
+    "id": "8",
+    "title": "Xem phim",
+    "description": "Xem những bộ phim mới",
+    "status": "done",
+    "category": "relax",
+    "startTime": "2025-12-16T22:00:00",
+    "durationMinutes": 120
+  },
+  {
+    "id": "9",
+    "title": "Xem phim",
+    "description": "Xem những bộ phim mới",
+    "status": "failed",
+    "category": "relax",
+    "startTime": "2025-12-15T22:00:00",
+    "durationMinutes": 120
   }
 ]
