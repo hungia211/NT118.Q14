@@ -9,6 +9,8 @@ import '../../services/book_service.dart';
 import '../../widgets/book_card.dart';
 import 'package:rxdart/rxdart.dart';
 
+import '../calendar/calendar_page.dart';
+import '../statistics/statistics_page.dart';
 import '../tasks/task_list_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -32,16 +34,27 @@ class _HomePageState extends State<HomePage> {
     "tối ưu hiệu suất",
   ];
 
+  late final Future<List<Task>> _tasksFuture = taskService.getTasks();
+  late final Future<List> _booksFuture = bookService.fetchBooks(
+    vietnamKeywords[DateTime.now().millisecondsSinceEpoch % vietnamKeywords.length],
+  );
+
   @override
   Widget build(BuildContext context) {
     double progress = 0.5; // 50%
 
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: const Color(0xFFF9FEFB),
 
       // BOTTOM NAVIGATION
       bottomNavigationBar: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        height: 60 + MediaQuery.of(context).padding.bottom,
+        padding: EdgeInsets.fromLTRB(
+          10,
+          20,
+          10,
+          0 + MediaQuery.of(context).padding.bottom,
+        ),
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.only(
@@ -57,36 +70,90 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             // HOME (selected)
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.green.shade100,
-                shape: BoxShape.circle,
+            Expanded(
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade100,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.home, color: Colors.green),
+                ),
               ),
-              child: const Icon(Icons.home, color: Colors.green),
             ),
 
             // GRID
-            const Icon(Icons.grid_view, size: 28, color: Colors.black),
+            Expanded(
+              child: Center(
+                child: InkWell(
+                  onTap: () async {
+                    final tasks = await _tasksFuture;
+                    final todayTasks = taskController.filterTasksForToday(tasks);
+
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => TaskListPage(tasks: todayTasks),
+                      ),
+                    );
+                  },
+                  child: const Icon(Icons.grid_view, size: 28),
+                ),
+              ),
+            ),
+
 
             // BIG PLUS BUTTON
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: const BoxDecoration(
-                color: Colors.green,
-                shape: BoxShape.circle,
+            Expanded(
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: const BoxDecoration(
+                    color: Colors.green,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.add, size: 24, color: Colors.white),
+                ),
               ),
-              child: const Icon(Icons.add, size: 24, color: Colors.white),
             ),
 
             // CIRCLE ICON
-            Icon(Icons.circle_outlined, size: 30, color: Colors.black),
+            Expanded(
+              child: Center(
+                child: InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const StatisticsPage(),
+                      ),
+                    );
+                  },
+                  child: Center(child: Icon(Icons.circle_outlined, size: 30, color: Colors.black)),
+                ),
+              ),
+            ),
+
 
             // CALENDAR
-            const Icon(Icons.calendar_today, size: 28, color: Colors.black),
+            Expanded(
+              child: Center(
+                child: InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const CalendarPage(),
+                      ),
+                    );
+                  },
+                  child: Center(child: Icon(Icons.calendar_today, size: 28, color: Colors.black)),
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -117,7 +184,7 @@ class _HomePageState extends State<HomePage> {
                         children: [
                           Icon(Icons.search, color: Colors.grey),
                           SizedBox(width: 8),
-                          Text("Search", style: TextStyle(color: Colors.grey)),
+                          Text("Tìm kiếm", style: TextStyle(color: Colors.grey)),
                         ],
                       ),
                     ),
@@ -159,29 +226,13 @@ class _HomePageState extends State<HomePage> {
               ),
               const SizedBox(height: 8),
 
-              Center(
-                child: StreamBuilder<DateTime>(
-                  stream: Stream.periodic(
-                    const Duration(seconds: 20),
-                    (_) => DateTime.now(),
-                  ).startWith(DateTime.now()),
-                  builder: (context, snapshot) {
-                    final now = snapshot.data ?? DateTime.now();
-
-                    return Text(
-                      getVietnameseDateTime(now),
-                      style: const TextStyle(fontSize: 14, color: Colors.grey),
-                      textAlign: TextAlign.center,
-                    );
-                  },
-                ),
-              ),
+              Center(child: _buildClock()),
 
               const SizedBox(height: 30),
 
               // TASK CARD
-              FutureBuilder(
-                future: taskService.getTasks(),
+              FutureBuilder<List<Task>>(
+                future: _tasksFuture,
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return const Center(child: CircularProgressIndicator());
@@ -189,17 +240,20 @@ class _HomePageState extends State<HomePage> {
 
                   final tasks = snapshot.data!;
                   final todayTasks = taskController.filterTasksForToday(tasks);
-                  final firstTask = taskController.getFirstTaskOfToday(
-                    todayTasks,
-                  );
 
-                  if (firstTask == null) {
+                  final currentTask = taskController.getCurrentTask(todayTasks);
+                  final nextTask = taskController.getNextTask(todayTasks);
+
+                  // Task hiển thị trên Home
+                  final displayTask = currentTask ?? nextTask;
+
+                  if (displayTask == null) {
                     return const Text("Không có công việc hôm nay 😴");
                   }
 
                   return Column(
                     children: [
-                      LayeredTaskCard(context, firstTask),
+                      LayeredTaskCard(context, displayTask),
 
                       const SizedBox(height: 15),
 
@@ -318,7 +372,7 @@ class _HomePageState extends State<HomePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          "Khám phá điều mới!",
+                          "Tạo mới 1 công việc!",
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -385,10 +439,7 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 10),
 
               FutureBuilder(
-                future: bookService.fetchBooks(
-                  vietnamKeywords[DateTime.now().second %
-                      vietnamKeywords.length],
-                ),
+                future: _booksFuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const SizedBox(
@@ -625,7 +676,7 @@ Widget LayeredTaskCard(BuildContext context, Task task) {
 
 Widget _layer(BuildContext context, Color color) {
   return Container(
-    height: 120,
+    height: 130,
     width: MediaQuery.of(context).size.width - 60,
     decoration: BoxDecoration(
       color: color,
@@ -679,4 +730,20 @@ String getVietnameseDateTime(DateTime now) {
   String minute = now.minute.toString().padLeft(2, '0');
 
   return "$hour:$minute - $weekdayName, ${now.day} $monthName ${now.year}";
+}
+
+Widget _buildClock() {
+  return StreamBuilder<DateTime>(
+    stream: Stream.periodic(
+      const Duration(seconds: 60),
+          (_) => DateTime.now(),
+    ).startWith(DateTime.now()),
+    builder: (context, snapshot) {
+      final now = snapshot.data ?? DateTime.now();
+      return Text(
+        getVietnameseDateTime(now),
+        style: const TextStyle(fontSize: 14, color: Colors.grey),
+      );
+    },
+  );
 }

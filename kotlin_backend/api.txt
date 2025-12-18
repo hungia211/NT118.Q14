@@ -1,0 +1,74 @@
+#auth
+đăng ký
+POST: /auth/register
+đăng nhập 
+POST: /auth/login
+quên mật khẩu
+POST: /auth/reset-password
+
+# User
+lấy thông tin cá nhân
+GET: User/me
+Sửa thông tin cá nhân
+PUT: User/me
+
+#Task
+Lấy công việc hiện tại (ngày hôm nay)
+GET: /tasks/current
+Lấy công việc tiếp theo (ngày hôm nayu)
+GET: /tasks/next
+Lấy danh sách công việc theo ngày hôm nay
+GET: /tasks
+lấy công việc theo filter
+GET: /task?id=123
+Thêm mới 1 công việc
+POST: /tasks
+Sửa nội dung task
+PUT: /tasks/{id}
+Xóa task
+DELETE: /tasks/{id}
+
+#Statistics
+Lấy số phần trăm công việc đã hoàn thành
+GET: /statistics/overview
+{
+  "completionRate": 0.72,
+
+  "monthlyStats": [
+    { "year": 2025, "month": 3, "percent": 65 },
+    { "year": 2025, "month": 4, "percent": 70 },
+    { "year": 2025, "month": 5, "percent": 80 }
+  ],
+
+  "categoryStats": [
+    { "category": "work", "count": 12, "percent": 40 },
+    { "category": "study", "count": 8, "percent": 27 },
+    { "category": "health", "count": 5, "percent": 17 }
+  ]
+}
+
+Thống kê theo tháng
+GET: /statistics/monthly
+{
+  "completionRate": 0.6,
+
+  "dailyStats": [
+    { "date": "2025-05-01", "percent": 100 },
+    { "date": "2025-05-02", "percent": 50 },
+    { "date": "2025-05-03", "percent": 0 }
+  ],
+
+  "categoryStats": [
+    { "category": "work", "count": 6, "percent": 50 },
+    { "category": "study", "count": 4, "percent": 33 }
+  ]
+}
+
+Tổng quan hiệu suất, thay đổi theo range (all, month, ..), year, month 
+GET: /api/tracker?range=month&year=2025&month=2
+
+
+
+
+
+

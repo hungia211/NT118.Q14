@@ -26,7 +26,7 @@ class BookCard extends StatelessWidget {
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Không thể mở liên kết 🙁")),
+            const SnackBar(content: Text("Không thể mở liên kết")),
           );
         }
       },
