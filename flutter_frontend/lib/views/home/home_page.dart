@@ -11,11 +11,14 @@ import 'package:rxdart/rxdart.dart';
 
 import '../calendar/calendar_page.dart';
 import '../statistics/statistics_page.dart';
+import '../tasks/add_task_page.dart';
 import '../tasks/task_list_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../services/user_service.dart';
+
 
 class HomePage extends StatefulWidget {
-  final String username;
-  const HomePage({super.key, this.username = "User"});
+  const HomePage({super.key});
 
   @override
   _HomePageState createState() => _HomePageState();
@@ -24,8 +27,10 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final TaskService taskService = TaskService();
   final TaskController taskController = TaskController();
-
   final BookService bookService = BookService();
+  final UserService userService = UserService();
+
+  String? userName;
 
   // các từ khóa đề xuất
   final List<String> vietnamKeywords = [
@@ -36,8 +41,26 @@ class _HomePageState extends State<HomePage> {
 
   late final Future<List<Task>> _tasksFuture = taskService.getTasks();
   late final Future<List> _booksFuture = bookService.fetchBooks(
-    vietnamKeywords[DateTime.now().millisecondsSinceEpoch % vietnamKeywords.length],
+    vietnamKeywords[
+    DateTime.now().millisecondsSinceEpoch % vietnamKeywords.length],
   );
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUser();
+  }
+
+  Future<void> _loadUser() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    final data = await userService.getUser(uid);
+    setState(() {
+      userName = data?['name'];
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -109,13 +132,23 @@ class _HomePageState extends State<HomePage> {
             // BIG PLUS BUTTON
             Expanded(
               child: Center(
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: const BoxDecoration(
-                    color: Colors.green,
-                    shape: BoxShape.circle,
+                child: InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const AddTaskPage(),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: const BoxDecoration(
+                      color: Colors.green,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.add, size: 24, color: Colors.white),
                   ),
-                  child: const Icon(Icons.add, size: 24, color: Colors.white),
                 ),
               ),
             ),
@@ -204,13 +237,18 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 20),
 
               // WELCOME TEXT
-              Text(
-                "Chào mừng ${widget.username} đã quay trở lại!",
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
+              Center (
+                child:Text(
+                  userName == null
+                      ? "Chào mừng bạn!"
+                      : "Chào mừng $userName!",
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
+
               const SizedBox(height: 8),
 
               const Center(
@@ -627,11 +665,11 @@ Widget LayeredTaskCard(BuildContext context, Task task) {
       children: [
         // SHADOW 3D DƯỚI ĐÁY (nằm dưới tất cả)
         Positioned(
-          bottom: 12,
+          bottom: 4,
           left: 20,
           right: -4,
           child: Container(
-            height: 138,
+            height: 145,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(40),
