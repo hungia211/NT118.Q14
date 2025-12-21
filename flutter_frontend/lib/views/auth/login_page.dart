@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:todo_app/views/home/home_page.dart';
+import '../../services/user_service.dart';
 import '../../widgets/black_button.dart';
 import '../../widgets/white_button.dart';
 import '../../widgets/custom_textfield.dart';
@@ -7,6 +8,9 @@ import '../../widgets/custom_password_field.dart';
 import '../../widgets/social_login_button.dart';
 import 'forgot_password_page.dart';
 import 'register_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../services/auth_service.dart';
+
 
 
 
@@ -16,6 +20,7 @@ class LoginPage extends StatelessWidget {
 
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  final _authService = AuthService();
 
   @override
   Widget build(BuildContext context) {
@@ -103,14 +108,8 @@ class LoginPage extends StatelessWidget {
                   // LOGIN BUTTON
                   BlackButton(
                     text: "Đăng nhập",
-                    // onPressed: (){},
                     // Chỉ test điều hướng thử ở chỗ này thôi
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => HomePage(username: "Nghĩa")),
-                      );
-                    },
+                    onPressed: () => _handleLogin(context),
                   ),
 
                   const SizedBox(height: 8),
@@ -169,8 +168,32 @@ class LoginPage extends StatelessWidget {
                           color: Colors.white,
                           borderColor: Colors.grey.shade300,
                           textColor: Colors.black,
-                          onTap: () {
-                            // TODO: Login Google
+                          onTap: () async {
+                            try {
+                              final user = await _authService.signInWithGoogle();
+                              if (user != null) {
+                                final userService = UserService();
+
+                                await userService.createUserIfNotExists(
+                                  uid: user.uid,
+                                  email: user.email ?? '',
+                                  name: user.displayName ?? 'Người dùng',
+                                  provider: 'google',
+                                );
+
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => HomePage(),
+                                  ),
+                                );
+                              }
+
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(e.toString())),
+                              );
+                            }
                           },
                         ),
                       ),
@@ -215,4 +238,44 @@ class LoginPage extends StatelessWidget {
       ),
     );
   }
+
+  void _handleLogin(BuildContext context) async {
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Vui lòng nhập đầy đủ thông tin")),
+      );
+      return;
+    }
+
+    try {
+      final user = await _authService.login(
+        email: email,
+        password: password,
+      );
+
+      if (user != null) {
+        final userService = UserService();
+
+        await userService.createUserIfNotExists(
+          uid: user.uid,
+          email: user.email ?? email,
+          name: user.displayName ?? 'Người dùng',
+          provider: 'password',
+        );
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => HomePage()),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
+  }
+
 }

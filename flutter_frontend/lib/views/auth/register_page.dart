@@ -3,8 +3,11 @@ import 'package:todo_app/views/auth/login_page.dart';
 import '../../widgets/custom_textfield.dart';
 import '../../widgets/custom_password_field.dart';
 import '../../widgets/black_button.dart';
-import '../../widgets/white_button.dart';
 import '../../widgets/social_login_button.dart';
+import '../../services/auth_service.dart';
+import '../../services/user_service.dart';
+
+
 
 
 class RegisterPage extends StatelessWidget {
@@ -14,6 +17,7 @@ class RegisterPage extends StatelessWidget {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
+  final _authService = AuthService();
 
   @override
   Widget build(BuildContext context) {
@@ -84,9 +88,7 @@ class RegisterPage extends StatelessWidget {
 
                 BlackButton(
                   text: "Đăng ký",
-                  onPressed: () {
-                    // TODO: Xử lý đăng ký
-                  },
+                  onPressed: () => _handleRegister(context),
                 ),
 
                 const SizedBox(height: 20),
@@ -177,4 +179,65 @@ class RegisterPage extends StatelessWidget {
       ),
     );
   }
+
+  void _handleRegister(BuildContext context) async {
+    final name = nameController.text.trim();
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+    final confirmPassword = confirmPasswordController.text.trim();
+
+    if (name.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Vui lòng nhập đầy đủ thông tin")),
+      );
+      return;
+    }
+
+    if (password != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Mật khẩu xác nhận không khớp")),
+      );
+      return;
+    }
+
+    if (password.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Mật khẩu phải từ 6 ký tự")),
+      );
+      return;
+    }
+
+    try {
+      final user = await _authService.register(
+        email: email,
+        password: password,
+      );
+
+      if (user != null) {
+        final userService = UserService();
+
+        await userService.createUserIfNotExists(
+          uid: user.uid,
+          email: email,
+          name: nameController.text.trim(),
+          provider: 'password',
+        );
+
+        // Đăng ký thành công → quay về Login
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => LoginPage()),
+        );
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Đăng ký thành công, vui lòng đăng nhập")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
+  }
+
 }
