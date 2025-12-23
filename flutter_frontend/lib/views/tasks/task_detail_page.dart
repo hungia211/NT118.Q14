@@ -2,16 +2,14 @@
 import 'package:flutter/material.dart';
 import '../../models/task.dart';
 import '../home/home_page.dart';
+import '../../controllers/task_controller.dart';
+import 'package:get/get.dart';
 
 class TaskDetailPage extends StatefulWidget {
   final Task task;
   final bool isNewTask;
 
-  const TaskDetailPage({
-    super.key,
-    required this.task,
-    this.isNewTask = false,
-  });
+  const TaskDetailPage({super.key, required this.task, this.isNewTask = false});
 
   @override
   State<TaskDetailPage> createState() => _TaskDetailPageState();
@@ -26,22 +24,59 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
   late int _durationMinutes;
   bool _isEditing = false;
 
+  // Khai báo controller GetX
+  final TaskController taskController = Get.put(TaskController());
+
   final Map<String, Map<String, dynamic>> _categories = {
-    'work': {'name': 'Công việc', 'image': 'assets/illus/meeting.png', 'color': Colors.blue},
-    'study': {'name': 'Học tập', 'image': 'assets/illus/coding.png', 'color': Colors.orange},
-    'health': {'name': 'Sức khỏe', 'image': 'assets/illus/workout.png', 'color': Colors.red},
-    'relax': {'name': 'Thư giãn', 'image': 'assets/illus/relax.png', 'color': Colors.purple},
-    'cook': {'name': 'Nấu ăn', 'image': 'assets/illus/cook.png', 'color': Colors.green},
-    'gardening': {'name': 'Làm vườn', 'image': 'assets/illus/plant.png', 'color': Colors.teal},
-    'meditation': {'name': 'Thiền', 'image': 'assets/illus/meditation.png', 'color': Colors.indigo},
-    'other': {'name': 'Khác', 'image': 'assets/illus/default.png', 'color': Colors.grey},
+    'work': {
+      'name': 'Công việc',
+      'image': 'assets/illus/meeting.png',
+      'color': Colors.blue,
+    },
+    'study': {
+      'name': 'Học tập',
+      'image': 'assets/illus/coding.png',
+      'color': Colors.orange,
+    },
+    'health': {
+      'name': 'Sức khỏe',
+      'image': 'assets/illus/workout.png',
+      'color': Colors.red,
+    },
+    'relax': {
+      'name': 'Thư giãn',
+      'image': 'assets/illus/relax.png',
+      'color': Colors.purple,
+    },
+    'cook': {
+      'name': 'Nấu ăn',
+      'image': 'assets/illus/cook.png',
+      'color': Colors.green,
+    },
+    'gardening': {
+      'name': 'Làm vườn',
+      'image': 'assets/illus/plant.png',
+      'color': Colors.teal,
+    },
+    'meditation': {
+      'name': 'Thiền',
+      'image': 'assets/illus/meditation.png',
+      'color': Colors.indigo,
+    },
+    'other': {
+      'name': 'Khác',
+      'image': 'assets/illus/default.png',
+      'color': Colors.grey,
+    },
   };
 
   @override
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: widget.task.title);
-    _descriptionController = TextEditingController(text: widget.task.description);
+    _descriptionController = TextEditingController(
+      text: widget.task.description,
+    );
     _selectedCategory = widget.task.category;
     _selectedDate = widget.task.startTime;
     _selectedTime = TimeOfDay.fromDateTime(widget.task.startTime);
@@ -56,12 +91,24 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
     super.dispose();
   }
 
-  void _confirmTask() {
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const HomePage()),
-          (route) => false,
-    );
+  Future<void> _confirmTask() async {
+    final title = _titleController.text;
+    final description = _descriptionController.text;
+
+    try {
+      await taskController.addTask(title: title, description: description);
+
+      // Khi addTask thành công, trở về HomePage
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const HomePage()),
+        (route) => false,
+      );
+
+      Get.snackbar('Success', 'Task added successfully');
+    } catch (e) {
+      Get.snackbar('Error', e.toString());
+    }
   }
 
   IconData _getCategoryIcon(String category) {
@@ -195,16 +242,16 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
               ),
               child: _isEditing
                   ? TextField(
-                controller: _titleController,
-                decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  hintText: 'Nhập tiêu đề...',
-                ),
-              )
+                      controller: _titleController,
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        hintText: 'Nhập tiêu đề...',
+                      ),
+                    )
                   : Text(
-                _titleController.text,
-                style: const TextStyle(fontSize: 18),
-              ),
+                      _titleController.text,
+                      style: const TextStyle(fontSize: 18),
+                    ),
             ),
 
             const SizedBox(height: 20),
@@ -227,19 +274,19 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
               ),
               child: _isEditing
                   ? TextField(
-                controller: _descriptionController,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  hintText: 'Nhập mô tả...',
-                ),
-              )
+                      controller: _descriptionController,
+                      maxLines: 3,
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        hintText: 'Nhập mô tả...',
+                      ),
+                    )
                   : Text(
-                _descriptionController.text.isEmpty
-                    ? 'Không có mô tả'
-                    : _descriptionController.text,
-                style: const TextStyle(fontSize: 16),
-              ),
+                      _descriptionController.text.isEmpty
+                          ? 'Không có mô tả'
+                          : _descriptionController.text,
+                      style: const TextStyle(fontSize: 16),
+                    ),
             ),
 
             const SizedBox(height: 20),
@@ -311,10 +358,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                 ),
                 child: const Text(
                   'Quay lại chỉnh sửa',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey,
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.grey),
                 ),
               ),
             ),
@@ -341,10 +385,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
             children: [
               Text(
                 label,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey,
-                ),
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
               ),
               Text(
                 value,

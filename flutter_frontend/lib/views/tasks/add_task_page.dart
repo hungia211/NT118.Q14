@@ -9,6 +9,7 @@ import '../../controllers/task_controller.dart';
 import '../../services/task_service.dart';
 import 'task_list_page.dart';
 import 'package:get/get.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AddTaskPage extends StatefulWidget {
   const AddTaskPage({super.key});
@@ -701,10 +702,32 @@ class _AddTaskPageState extends State<AddTaskPage> {
           child: SizedBox(
             width: double.infinity,
             child: ElevatedButton(
+              // onPressed: () {
+              //   taskController.addTask(
+              //     title: _titleController.text,
+              //     description: _descriptionController.text,
+              //   );
+              // },
               onPressed: () {
-                taskController.addTask(
+                final newTask = Task(
+                  id: '',
+                  userId: FirebaseAuth.instance.currentUser!.uid,
                   title: _titleController.text,
                   description: _descriptionController.text,
+                  status: 'todo',
+                  category: 'other',
+                  startTime: DateTime.now(),
+                  duration: const Duration(minutes: 30),
+                );
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => TaskDetailPage(
+                      task: newTask, // <-- truyền đúng parameter
+                      isNewTask: true,
+                    ),
+                  ),
                 );
               },
               style: ElevatedButton.styleFrom(
