@@ -158,32 +158,33 @@ class _AddTaskPageState extends State<AddTaskPage> {
     }
   }
 
-  void _createTask() {
-    final startTime = DateTime(
-      _selectedDate.year,
-      _selectedDate.month,
-      _selectedDate.day,
-      _selectedTime.hour,
-      _selectedTime.minute,
-    );
+  // void _createTask() {
+  //   final startTime = DateTime(
+  //     _selectedDate.year,
+  //     _selectedDate.month,
+  //     _selectedDate.day,
+  //     _selectedTime.hour,
+  //     _selectedTime.minute,
+  //   );
 
-    final newTask = Task(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      title: _titleController.text,
-      description: _descriptionController.text,
-      status: 'not-started',
-      category: _selectedCategory,
-      startTime: startTime,
-      duration: Duration(hours: _durationHours, minutes: _durationMinutes),
-    );
+  //   final newTask = Task(
+  //     id: DateTime.now().millisecondsSinceEpoch.toString(),
+  //     userId: user!.uid,
+  //     title: _titleController.text,
+  //     description: _descriptionController.text,
+  //     status: 'not-started',
+  //     category: _selectedCategory,
+  //     startTime: startTime,
+  //     duration: Duration(hours: _durationHours, minutes: _durationMinutes),
+  //   );
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => TaskDetailPage(task: newTask, isNewTask: true),
-      ),
-    );
-  }
+  //   Navigator.push(
+  //     context,
+  //     MaterialPageRoute(
+  //       builder: (_) => TaskDetailPage(task: newTask, isNewTask: true),
+  //     ),
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {

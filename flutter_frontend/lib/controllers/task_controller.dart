@@ -1,6 +1,7 @@
 import '../models/task.dart';
 import 'package:get/get.dart';
 import '../services/task_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class TaskController extends GetxController {
   final TaskService _taskService = TaskService();
@@ -8,12 +9,13 @@ class TaskController extends GetxController {
 
   Future<void> addTask({required String title, String? description}) async {
     if (title.trim().isEmpty) return;
-
+    final user = FirebaseAuth.instance.currentUser;
     try {
       isLoading.value = true;
 
       final task = Task(
         id: '', // Firestore sẽ sinh id
+        userId: user!.uid,
         title: title,
         description: description,
         status: 'todo', // mặc định
