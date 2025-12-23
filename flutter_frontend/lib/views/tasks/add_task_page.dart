@@ -8,6 +8,7 @@ import 'task_detail_page.dart';
 import '../../controllers/task_controller.dart';
 import '../../services/task_service.dart';
 import 'task_list_page.dart';
+import 'package:get/get.dart';
 
 class AddTaskPage extends StatefulWidget {
   const AddTaskPage({super.key});
@@ -20,9 +21,13 @@ class _AddTaskPageState extends State<AddTaskPage> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
 
+  // Đăng ký controller nếu chưa có
+  final TaskController controller = Get.put(TaskController());
+  final taskController = Get.find<TaskController>();
+
   // Thêm 2 dòng này
   final TaskService taskService = TaskService();
-  final TaskController taskController = TaskController();
+  // final TaskController taskController = TaskController();
 
   String _selectedCategory = 'work';
   DateTime _selectedDate = DateTime.now();
@@ -35,14 +40,46 @@ class _AddTaskPageState extends State<AddTaskPage> {
   bool _showSuggestions = false;
 
   final Map<String, Map<String, dynamic>> _categories = {
-    'work': {'name': 'Công việc', 'image': 'assets/illus/meeting.png', 'color': Colors.blue},
-    'study': {'name': 'Học tập', 'image': 'assets/illus/coding.png', 'color': Colors.orange},
-    'health': {'name': 'Sức khỏe', 'image': 'assets/illus/workout.png', 'color': Colors.red},
-    'relax': {'name': 'Thư giãn', 'image': 'assets/illus/relax.png', 'color': Colors.purple},
-    'cook': {'name': 'Nấu ăn', 'image': 'assets/illus/cook.png', 'color': Colors.green},
-    'gardening': {'name': 'Làm vườn', 'image': 'assets/illus/plant.png', 'color': Colors.teal},
-    'meditation': {'name': 'Thiền', 'image': 'assets/illus/meditation.png', 'color': Colors.indigo},
-    'other': {'name': 'Khác', 'image': 'assets/illus/default.png', 'color': Colors.grey},
+    'work': {
+      'name': 'Công việc',
+      'image': 'assets/illus/meeting.png',
+      'color': Colors.blue,
+    },
+    'study': {
+      'name': 'Học tập',
+      'image': 'assets/illus/coding.png',
+      'color': Colors.orange,
+    },
+    'health': {
+      'name': 'Sức khỏe',
+      'image': 'assets/illus/workout.png',
+      'color': Colors.red,
+    },
+    'relax': {
+      'name': 'Thư giãn',
+      'image': 'assets/illus/relax.png',
+      'color': Colors.purple,
+    },
+    'cook': {
+      'name': 'Nấu ăn',
+      'image': 'assets/illus/cook.png',
+      'color': Colors.green,
+    },
+    'gardening': {
+      'name': 'Làm vườn',
+      'image': 'assets/illus/plant.png',
+      'color': Colors.teal,
+    },
+    'meditation': {
+      'name': 'Thiền',
+      'image': 'assets/illus/meditation.png',
+      'color': Colors.indigo,
+    },
+    'other': {
+      'name': 'Khác',
+      'image': 'assets/illus/default.png',
+      'color': Colors.grey,
+    },
   };
 
   final List<String> _allTasks = [
@@ -68,9 +105,9 @@ class _AddTaskPageState extends State<AddTaskPage> {
       } else {
         _suggestions.clear();
         _suggestions.addAll(
-            _allTasks.where((task) =>
-                task.toLowerCase().contains(query.toLowerCase())
-            ).toList()
+          _allTasks
+              .where((task) => task.toLowerCase().contains(query.toLowerCase()))
+              .toList(),
         );
         _showSuggestions = _suggestions.isNotEmpty;
       }
@@ -183,9 +220,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => const HomePage(),
-                      ),
+                      MaterialPageRoute(builder: (_) => const HomePage()),
                     );
                   },
                   child: const Icon(Icons.home, size: 30, color: Colors.black),
@@ -193,14 +228,15 @@ class _AddTaskPageState extends State<AddTaskPage> {
               ),
             ),
 
-
             // GRID
             Expanded(
               child: Center(
                 child: InkWell(
                   onTap: () async {
                     final tasks = await taskService.getTasks();
-                    final todayTasks = taskController.filterTasksForToday(tasks);
+                    final todayTasks = taskController.filterTasksForToday(
+                      tasks,
+                    );
 
                     Navigator.push(
                       context,
@@ -209,7 +245,11 @@ class _AddTaskPageState extends State<AddTaskPage> {
                       ),
                     );
                   },
-                  child: const Icon(Icons.grid_view, size: 30, color: Colors.black),
+                  child: const Icon(
+                    Icons.grid_view,
+                    size: 30,
+                    color: Colors.black,
+                  ),
                 ),
               ),
             ),
@@ -235,12 +275,16 @@ class _AddTaskPageState extends State<AddTaskPage> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => const StatisticsPage(),
-                      ),
+                      MaterialPageRoute(builder: (_) => const StatisticsPage()),
                     );
                   },
-                  child: Center(child: Icon(Icons.circle_outlined, size: 30, color: Colors.black)),
+                  child: Center(
+                    child: Icon(
+                      Icons.circle_outlined,
+                      size: 30,
+                      color: Colors.black,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -252,12 +296,16 @@ class _AddTaskPageState extends State<AddTaskPage> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => const CalendarPage(),
-                      ),
+                      MaterialPageRoute(builder: (_) => const CalendarPage()),
                     );
                   },
-                  child: Center(child: Icon(Icons.calendar_today, size: 28, color: Colors.black)),
+                  child: Center(
+                    child: Icon(
+                      Icons.calendar_today,
+                      size: 28,
+                      color: Colors.black,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -293,10 +341,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
               children: [
                 const Text(
                   'Bạn sẽ làm gì?',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 20),
 
@@ -397,7 +442,9 @@ class _AddTaskPageState extends State<AddTaskPage> {
                               : Colors.white,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: isSelected ? Colors.green : Colors.grey.shade300,
+                            color: isSelected
+                                ? Colors.green
+                                : Colors.grey.shade300,
                             width: isSelected ? 2 : 1,
                           ),
                         ),
@@ -442,7 +489,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
         ),
 
         // Bỏ _buildCategoryCard() ở đây
-
         Padding(
           padding: const EdgeInsets.all(20),
           child: SizedBox(
@@ -467,8 +513,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
             ),
           ),
         ),
-
-
       ],
     );
   }
@@ -476,11 +520,27 @@ class _AddTaskPageState extends State<AddTaskPage> {
   Widget _buildDurationStep() {
     // Lấy tên tháng tiếng Việt
     const months = [
-      "tháng 1", "tháng 2", "tháng 3", "tháng 4", "tháng 5", "tháng 6",
-      "tháng 7", "tháng 8", "tháng 9", "tháng 10", "tháng 11", "tháng 12"
+      "tháng 1",
+      "tháng 2",
+      "tháng 3",
+      "tháng 4",
+      "tháng 5",
+      "tháng 6",
+      "tháng 7",
+      "tháng 8",
+      "tháng 9",
+      "tháng 10",
+      "tháng 11",
+      "tháng 12",
     ];
     const weekdays = [
-      "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy", "Chủ Nhật"
+      "Thứ Hai",
+      "Thứ Ba",
+      "Thứ Tư",
+      "Thứ Năm",
+      "Thứ Sáu",
+      "Thứ Bảy",
+      "Chủ Nhật",
     ];
 
     final weekdayName = weekdays[(_selectedDate.weekday - 1) % 7];
@@ -536,10 +596,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
               children: [
                 const Text(
                   'Trong bao lâu?',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 20),
 
@@ -563,14 +620,26 @@ class _AddTaskPageState extends State<AddTaskPage> {
                     }),
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 4),
-                      child: Text(':', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
+                      child: Text(
+                        ':',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                     _buildLargeNumberPicker(_durationMinutes, 0, 59, (val) {
                       setState(() => _durationMinutes = val);
                     }),
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 4),
-                      child: Text(':', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
+                      child: Text(
+                        ':',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                     _buildLargeNumberPicker(_durationSeconds, 0, 59, (val) {
                       setState(() => _durationSeconds = val);
@@ -594,12 +663,26 @@ class _AddTaskPageState extends State<AddTaskPage> {
                       _buildTimeBox(hour12.toString().padLeft(2, '0')),
                       const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 4),
-                        child: Text(':', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
+                        child: Text(
+                          ':',
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
-                      _buildTimeBox(_selectedTime.minute.toString().padLeft(2, '0')),
+                      _buildTimeBox(
+                        _selectedTime.minute.toString().padLeft(2, '0'),
+                      ),
                       const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 4),
-                        child: Text(':', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
+                        child: Text(
+                          ':',
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                       _buildTimeBox(amPm),
                     ],
@@ -617,7 +700,12 @@ class _AddTaskPageState extends State<AddTaskPage> {
           child: SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: _createTask,
+              onPressed: () {
+                taskController.addTask(
+                  title: _titleController.text,
+                  description: _descriptionController.text,
+                );
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.black,
                 padding: const EdgeInsets.symmetric(vertical: 16),
@@ -636,8 +724,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
             ),
           ),
         ),
-
-
       ],
     );
   }
@@ -651,15 +737,17 @@ class _AddTaskPageState extends State<AddTaskPage> {
       ),
       child: Text(
         text,
-        style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-        ),
+        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
       ),
     );
   }
 
-  Widget _buildLargeNumberPicker(int value, int min, int max, Function(int) onChanged) {
+  Widget _buildLargeNumberPicker(
+    int value,
+    int min,
+    int max,
+    Function(int) onChanged,
+  ) {
     return Container(
       width: 70,
       height: 70,

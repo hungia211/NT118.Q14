@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/task.dart';
 
 class TaskService {
@@ -11,6 +11,7 @@ class TaskService {
   // URL API thật (trỏ vào Spring Boot)
   final String baseUrl = "http://10.0.2.2:8080/tasks";
 
+  final _taskRef = FirebaseFirestore.instance.collection('tasks');
   // ============================================
   // PUBLIC FUNCTION — dùng để gọi ở Controller/UI
   // ============================================
@@ -23,7 +24,9 @@ class TaskService {
   // ============================================
   Future<List<Task>> _getTasksMock() async {
     try {
-      await Future.delayed(const Duration(milliseconds: 500)); // fake network delay
+      await Future.delayed(
+        const Duration(milliseconds: 500),
+      ); // fake network delay
 
       final jsonString = await rootBundle.loadString('assets/mock/tasks.json');
       final List data = jsonDecode(jsonString);
@@ -47,9 +50,15 @@ class TaskService {
 
       final List data = jsonDecode(res.body);
       return data.map((json) => Task.fromJson(json)).toList();
-
     } catch (e) {
       throw Exception("Error connecting to real API: $e");
     }
+  }
+
+  // API Add Task
+  Future<void> addTask(Task task) async {
+    final doc = _taskRef.doc();
+
+    await doc.set({...task.toJson(), 'id': doc.id});
   }
 }

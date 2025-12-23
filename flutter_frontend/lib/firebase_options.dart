@@ -63,6 +63,9 @@ class DefaultFirebaseOptions {
     messagingSenderId: '995117855452',
     projectId: 'tod-list-nt118',
     storageBucket: 'tod-list-nt118.firebasestorage.app',
+    androidClientId: '995117855452-5sspjgpbkvk5csmebvsgups3iptm44fr.apps.googleusercontent.com',
+    iosClientId: '995117855452-i21r50r60gqb1u44ei98pcat7bedk3fa.apps.googleusercontent.com',
     iosBundleId: 'com.example.todoApp',
   );
+
 }
