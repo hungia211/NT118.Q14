@@ -7,21 +7,19 @@ class AuthService {
   // GOOGLE SIGN IN
   Future<User?> signInWithGoogle() async {
     try {
-      final GoogleSignInAccount? googleUser =
-      await GoogleSignIn().signIn();
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
       if (googleUser == null) return null;
 
       final GoogleSignInAuthentication googleAuth =
-      await googleUser.authentication;
+          await googleUser.authentication;
 
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      final userCredential =
-      await _auth.signInWithCredential(credential);
+      final userCredential = await _auth.signInWithCredential(credential);
 
       return userCredential.user;
     } catch (e) {
@@ -46,10 +44,7 @@ class AuthService {
   }
 
   // ĐĂNG NHẬP
-  Future<User?> login({
-    required String email,
-    required String password,
-  }) async {
+  Future<User?> login({required String email, required String password}) async {
     try {
       final cred = await _auth.signInWithEmailAndPassword(
         email: email,
@@ -68,4 +63,7 @@ class AuthService {
 
   // USER HIỆN TẠI
   User? get currentUser => _auth.currentUser;
+
+  // Lấy User ID hiện tại
+  String? get currentUserId => _auth.currentUser?.uid;
 }

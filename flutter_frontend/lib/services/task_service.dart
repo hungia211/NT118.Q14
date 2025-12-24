@@ -1,57 +1,24 @@
-import 'dart:convert';
-import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/task.dart';
 
 class TaskService {
-  // Chuyển chế độ API ở đây: true = mock, false = API thật
-  bool useMock = true;
-
-  // URL API thật (trỏ vào Spring Boot)
-  final String baseUrl = "http://10.0.2.2:8080/tasks";
-
+  final _db = FirebaseFirestore.instance;
   final _taskRef = FirebaseFirestore.instance.collection('tasks');
+
   // ============================================
   // PUBLIC FUNCTION — dùng để gọi ở Controller/UI
   // ============================================
+
+  // API lấy danh sách tasks
   Future<List<Task>> getTasks() async {
-    return useMock ? _getTasksMock() : _getTasksReal();
-  }
-
-  // ============================================
-  // 1) GIẢ API (MOCK from assets)
-  // ============================================
-  Future<List<Task>> _getTasksMock() async {
     try {
-      await Future.delayed(
-        const Duration(milliseconds: 500),
-      ); // fake network delay
-
-      final jsonString = await rootBundle.loadString('assets/mock/tasks.json');
-      final List data = jsonDecode(jsonString);
-
-      return data.map((json) => Task.fromJson(json)).toList();
+      final querySnapshot = await _taskRef.get();
+      final tasks = querySnapshot.docs
+          .map((doc) => Task.fromJson(doc.data()))
+          .toList();
+      return tasks;
     } catch (e) {
-      throw Exception("Error loading mock tasks: $e");
-    }
-  }
-
-  // ============================================
-  // 2) API THẬT (Spring Boot)
-  // ============================================
-  Future<List<Task>> _getTasksReal() async {
-    try {
-      final res = await http.get(Uri.parse(baseUrl));
-
-      if (res.statusCode != 200) {
-        throw Exception("HTTP Error: ${res.statusCode}");
-      }
-
-      final List data = jsonDecode(res.body);
-      return data.map((json) => Task.fromJson(json)).toList();
-    } catch (e) {
-      throw Exception("Error connecting to real API: $e");
+      throw Exception("Error loading tasks from Firestore: $e");
     }
   }
 
@@ -60,5 +27,30 @@ class TaskService {
     final doc = _taskRef.doc();
 
     await doc.set({...task.toJson(), 'id': doc.id});
+  }
+
+  // API Get Task List
+  Future<List<Task>> getTasksByUser(String userId) async {
+    final snapshot = await _db
+        .collection('tasks')
+        .where('userId', isEqualTo: userId)
+        .get();
+
+    return snapshot.docs.map((doc) {
+      final data = doc.data();
+      return Task(
+        id: doc.id,
+        userId: data['userId'],
+        title: data['title'],
+        description: data['description'],
+        status: data['status'],
+        startTime: DateTime.parse(data['startTime']),
+        duration: data['duration'] != null
+            ? Duration(
+                minutes: data['duration'],
+              ) // giả sử lưu duration theo phút
+            : Duration.zero, // hoặc Duration? nếu model nullable
+      );
+    }).toList();
   }
 }

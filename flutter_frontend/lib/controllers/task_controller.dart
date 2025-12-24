@@ -5,8 +5,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class TaskController extends GetxController {
   final TaskService _taskService = TaskService();
-  var isLoading = false.obs;
+  // var isLoading = false.obs;
 
+  final RxList<Task> tasks = <Task>[].obs;
+  final RxBool isLoading = false.obs;
+
+  // Add Task
   Future<void> addTask({required String title, String? description}) async {
     if (title.trim().isEmpty) return;
     final user = FirebaseAuth.instance.currentUser;
@@ -29,6 +33,22 @@ class TaskController extends GetxController {
       Get.snackbar('Success', 'Task added');
     } catch (e) {
       Get.snackbar('Error', e.toString());
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /// Lấy tất cả task theo userId
+  Future<void> loadTasksByUser(String userId) async {
+    try {
+      print('Loading tasks for userId: $userId'); // debug
+      isLoading.value = true;
+      final result = await _taskService.getTasksByUser(userId);
+      print('Found ${result.length} tasks');
+      tasks.assignAll(result);
+    } catch (e) {
+      Get.snackbar('Error', e.toString());
+      print('Error: $e');
     } finally {
       isLoading.value = false;
     }

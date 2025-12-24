@@ -10,6 +10,7 @@ import '../../services/task_service.dart';
 import 'task_list_page.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../services/auth_service.dart';
 
 class AddTaskPage extends StatefulWidget {
   const AddTaskPage({super.key});
@@ -21,6 +22,9 @@ class AddTaskPage extends StatefulWidget {
 class _AddTaskPageState extends State<AddTaskPage> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+
+  late final AuthService authService;
+  late final String userId;
 
   // Đăng ký controller nếu chưa có
   final TaskController controller = Get.put(TaskController());
@@ -95,6 +99,17 @@ class _AddTaskPageState extends State<AddTaskPage> {
     'Nghỉ ngơi',
     'Làm bài tập',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    authService = Get.find<AuthService>();
+
+    final uid = authService.currentUserId;
+    if (uid == null) return;
+
+    userId = uid;
+  }
 
   int _currentStep = 0;
 
@@ -243,7 +258,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => TaskListPage(tasks: todayTasks),
+                        builder: (_) => TaskListPage(userId: userId),
                       ),
                     );
                   },
