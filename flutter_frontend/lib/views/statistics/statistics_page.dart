@@ -7,6 +7,8 @@ import '../../models/statistics.dart';
 import '../../controllers/task_controller.dart';
 import '../calendar/calendar_page.dart';
 import '../tasks/task_list_page.dart';
+import '../../services/auth_service.dart';
+import 'package:get/get.dart';
 
 class StatisticsPage extends StatefulWidget {
   const StatisticsPage({super.key});
@@ -21,6 +23,9 @@ class _StatisticsPageState extends State<StatisticsPage> {
   final controller = StatisticsController();
   final taskController = TaskController();
 
+  late final AuthService authService;
+  late final String userId;
+
   late Future<StatisticsOverview> _future;
   String selectedPeriod = 'Tất cả';
   int selectedMonth = DateTime.now().month;
@@ -28,13 +33,31 @@ class _StatisticsPageState extends State<StatisticsPage> {
 
   final List<String> _periods = [
     'Tất cả',
-    'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
-    'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12',
+    'Tháng 1',
+    'Tháng 2',
+    'Tháng 3',
+    'Tháng 4',
+    'Tháng 5',
+    'Tháng 6',
+    'Tháng 7',
+    'Tháng 8',
+    'Tháng 9',
+    'Tháng 10',
+    'Tháng 11',
+    'Tháng 12',
   ];
 
   @override
   void initState() {
     super.initState();
+    authService = Get.find<AuthService>();
+    final uid = authService.currentUserId;
+    if (uid == null) {
+      // chưa login → redirect hoặc return
+      return;
+    }
+
+    userId = uid;
     _future = _loadStatistics();
   }
 
@@ -67,7 +90,6 @@ class _StatisticsPageState extends State<StatisticsPage> {
       _future = _loadStatistics();
     });
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -106,9 +128,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => const HomePage(),
-                      ),
+                      MaterialPageRoute(builder: (_) => const HomePage()),
                     );
                   },
                   child: const Icon(Icons.home, size: 30, color: Colors.black),
@@ -116,23 +136,28 @@ class _StatisticsPageState extends State<StatisticsPage> {
               ),
             ),
 
-
             // GRID
             Expanded(
               child: Center(
                 child: InkWell(
                   onTap: () async {
                     final tasks = await taskService.getTasks();
-                    final todayTasks = taskController.filterTasksForToday(tasks);
+                    final todayTasks = taskController.filterTasksForToday(
+                      tasks,
+                    );
 
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => TaskListPage(tasks: todayTasks),
+                        builder: (_) => TaskListPage(userId: userId),
                       ),
                     );
                   },
-                  child: const Icon(Icons.grid_view, size: 30, color: Colors.black),
+                  child: const Icon(
+                    Icons.grid_view,
+                    size: 30,
+                    color: Colors.black,
+                  ),
                 ),
               ),
             ),
@@ -160,7 +185,9 @@ class _StatisticsPageState extends State<StatisticsPage> {
                     color: Colors.green.shade100,
                     shape: BoxShape.circle,
                   ),
-                  child: Center(child: Icon(Icons.circle_outlined, color: Colors.green)),
+                  child: Center(
+                    child: Icon(Icons.circle_outlined, color: Colors.green),
+                  ),
                 ),
               ),
             ),
@@ -172,12 +199,16 @@ class _StatisticsPageState extends State<StatisticsPage> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => const CalendarPage(),
-                      ),
+                      MaterialPageRoute(builder: (_) => const CalendarPage()),
                     );
                   },
-                  child: Center(child: Icon(Icons.calendar_today, size: 28, color: Colors.black)),
+                  child: Center(
+                    child: Icon(
+                      Icons.calendar_today,
+                      size: 28,
+                      color: Colors.black,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -202,7 +233,11 @@ class _StatisticsPageState extends State<StatisticsPage> {
                 children: [
                   const Text(
                     "Hiệu suất làm việc",
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black87),
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
                   ),
                   const SizedBox(height: 40),
                   _buildCircularProgress(data.completionRate),
@@ -246,13 +281,22 @@ class _StatisticsPageState extends State<StatisticsPage> {
               value: percent,
               strokeWidth: 16,
               strokeCap: StrokeCap.round,
-              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF4CAF50)),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                Color(0xFF4CAF50),
+              ),
             ),
           ),
           Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text("$value%", style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: Color(0xFF4CAF50))),
+              Text(
+                "$value%",
+                style: const TextStyle(
+                  fontSize: 42,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF4CAF50),
+                ),
+              ),
               Text(
                 "công việc đã hoàn thành",
                 style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
@@ -267,10 +311,27 @@ class _StatisticsPageState extends State<StatisticsPage> {
   Widget _buildBars(List<DailyStat> stats) {
     if (stats.isEmpty) return const Text("Chưa có dữ liệu");
 
-    final months = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
+    final months = [
+      'T1',
+      'T2',
+      'T3',
+      'T4',
+      'T5',
+      'T6',
+      'T7',
+      'T8',
+      'T9',
+      'T10',
+      'T11',
+      'T12',
+    ];
     final colors = [
-      const Color(0xFF5B7FFF), const Color(0xFFFFB74D), const Color(0xFFAB47BC),
-      const Color(0xFF4CAF50), const Color(0xFF26C6DA), const Color(0xFFEC407A),
+      const Color(0xFF5B7FFF),
+      const Color(0xFFFFB74D),
+      const Color(0xFFAB47BC),
+      const Color(0xFF4CAF50),
+      const Color(0xFF26C6DA),
+      const Color(0xFFEC407A),
     ];
 
     final isAllTime = selectedPeriod == 'Tất cả';
@@ -295,7 +356,14 @@ class _StatisticsPageState extends State<StatisticsPage> {
               ),
             ),
             const SizedBox(height: 8),
-            Text(label, style: TextStyle(fontSize: 11,fontWeight: FontWeight.w700, color: Colors.grey.shade600)),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: Colors.grey.shade600,
+              ),
+            ),
           ],
         );
       }),
@@ -314,7 +382,9 @@ class _StatisticsPageState extends State<StatisticsPage> {
         underline: const SizedBox(),
         icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF4CAF50)),
         style: const TextStyle(fontSize: 16, color: Colors.black87),
-        items: _periods.map((p) => DropdownMenuItem(value: p, child: Text(p))).toList(),
+        items: _periods
+            .map((p) => DropdownMenuItem(value: p, child: Text(p)))
+            .toList(),
         onChanged: _onPeriodChanged,
       ),
     );
@@ -324,9 +394,18 @@ class _StatisticsPageState extends State<StatisticsPage> {
     if (categories.isEmpty) return const SizedBox();
     return Column(
       children: [
-        const Text("Hoàn thành nhiều nhất", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        const Text(
+          "Hoàn thành nhiều nhất",
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
         const SizedBox(height: 16),
-        ...categories.map((cat) => _buildTaskRow(_getCategoryLabel(cat.category), cat.percent, _getCategoryColor(cat.category))),
+        ...categories.map(
+          (cat) => _buildTaskRow(
+            _getCategoryLabel(cat.category),
+            cat.percent,
+            _getCategoryColor(cat.category),
+          ),
+        ),
       ],
     );
   }
@@ -336,32 +415,78 @@ class _StatisticsPageState extends State<StatisticsPage> {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          SizedBox(width: 90, child: Text(title, style: const TextStyle(fontSize: 14))),
+          SizedBox(
+            width: 90,
+            child: Text(title, style: const TextStyle(fontSize: 14)),
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Container(
               height: 12,
-              decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(6)),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(6),
+              ),
               child: FractionallySizedBox(
                 alignment: Alignment.centerLeft,
                 widthFactor: percent / 100,
-                child: Container(decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(6))),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
               ),
             ),
           ),
           const SizedBox(width: 12),
-          SizedBox(width: 40, child: Text("$percent%", style: TextStyle(fontSize: 12,fontWeight: FontWeight.w700, color: Colors.grey.shade600))),
+          SizedBox(
+            width: 40,
+            child: Text(
+              "$percent%",
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: Colors.grey.shade600,
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 
   String _getCategoryLabel(String c) {
-    switch (c) { case 'work': return 'Công việc'; case 'study': return 'Học tập'; case 'health': return 'Sức khỏe'; case 'relax': return 'Thư giãn'; case 'cook': return 'Nấu ăn'; case 'meditation': return 'Thiền'; default: return 'Khác'; }
+    switch (c) {
+      case 'work':
+        return 'Công việc';
+      case 'study':
+        return 'Học tập';
+      case 'health':
+        return 'Sức khỏe';
+      case 'relax':
+        return 'Thư giãn';
+      case 'cook':
+        return 'Nấu ăn';
+      case 'meditation':
+        return 'Thiền';
+      default:
+        return 'Khác';
+    }
   }
 
   Color _getCategoryColor(String c) {
-    switch (c) { case 'work': return const Color(0xFF5B7FFF); case 'study': return const Color(0xFFFFB74D); case 'health': return const Color(0xFFEC407A); case 'relax': return const Color(0xFF26C6DA); default: return const Color(0xFF4CAF50); }
+    switch (c) {
+      case 'work':
+        return const Color(0xFF5B7FFF);
+      case 'study':
+        return const Color(0xFFFFB74D);
+      case 'health':
+        return const Color(0xFFEC407A);
+      case 'relax':
+        return const Color(0xFF26C6DA);
+      default:
+        return const Color(0xFF4CAF50);
+    }
   }
-
 }

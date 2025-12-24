@@ -8,23 +8,34 @@ import '../../widgets/edit_task_bottom_sheet.dart';
 import '../calendar/calendar_page.dart';
 import '../home/home_page.dart';
 import '../statistics/statistics_page.dart';
+import 'package:get/get.dart';
+import '../../controllers/task_controller.dart';
 
 class TaskListPage extends StatefulWidget {
-  final List<Task>? tasks;
+  final String userId;
 
-  const TaskListPage({super.key, this.tasks});
+  const TaskListPage({super.key, required this.userId});
 
   @override
   State<TaskListPage> createState() => _TaskListPageState();
 }
 
 class _TaskListPageState extends State<TaskListPage> {
-  late List<Task> list;
+  // late List<Task> list;
+
+  final TaskController controller = Get.put(TaskController());
 
   @override
   void initState() {
     super.initState();
-    list = List.from(widget.tasks ?? []);
+
+    // debug userId
+    print('TaskListPage userId: ${widget.userId}');
+
+    // Đảm bảo Rx value chỉ được set sau khi widget build xong
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.loadTasksByUser(widget.userId);
+    });
   }
 
   @override
@@ -64,16 +75,13 @@ class _TaskListPageState extends State<TaskListPage> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => const HomePage(),
-                      ),
+                      MaterialPageRoute(builder: (_) => const HomePage()),
                     );
                   },
                   child: const Icon(Icons.home, size: 30, color: Colors.black),
                 ),
               ),
             ),
-
 
             // GRID
             Expanded(
@@ -84,7 +92,9 @@ class _TaskListPageState extends State<TaskListPage> {
                     color: Colors.green.shade100,
                     shape: BoxShape.circle,
                   ),
-                  child: Center(child: Icon(Icons.grid_view, color: Colors.green)),
+                  child: Center(
+                    child: Icon(Icons.grid_view, color: Colors.green),
+                  ),
                 ),
               ),
             ),
@@ -110,12 +120,16 @@ class _TaskListPageState extends State<TaskListPage> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => const StatisticsPage(),
-                      ),
+                      MaterialPageRoute(builder: (_) => const StatisticsPage()),
                     );
                   },
-                  child: Center(child: Icon(Icons.circle_outlined, size: 30, color: Colors.black)),
+                  child: Center(
+                    child: Icon(
+                      Icons.circle_outlined,
+                      size: 30,
+                      color: Colors.black,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -127,12 +141,16 @@ class _TaskListPageState extends State<TaskListPage> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => const CalendarPage(),
-                      ),
+                      MaterialPageRoute(builder: (_) => const CalendarPage()),
                     );
                   },
-                  child: Center(child: Icon(Icons.calendar_today, size: 28, color: Colors.black)),
+                  child: Center(
+                    child: Icon(
+                      Icons.calendar_today,
+                      size: 28,
+                      color: Colors.black,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -153,10 +171,7 @@ class _TaskListPageState extends State<TaskListPage> {
                 children: [
                   const Text(
                     "Danh sách công việc hôm nay!",
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
@@ -165,7 +180,7 @@ class _TaskListPageState extends State<TaskListPage> {
                     child: StreamBuilder<DateTime>(
                       stream: Stream.periodic(
                         const Duration(seconds: 20),
-                            (_) => DateTime.now(),
+                        (_) => DateTime.now(),
                       ).startWith(DateTime.now()),
                       builder: (context, snapshot) {
                         final now = snapshot.data ?? DateTime.now();
@@ -187,79 +202,94 @@ class _TaskListPageState extends State<TaskListPage> {
 
             // ---------- TASK LIST ----------
             Expanded(
-              child: list.isEmpty
-                  ? const Center(
-                child: Text(
-                  "Không có công việc hôm nay 😴",
-                  style: TextStyle(color: Colors.grey),
-                ),
-              )
-                  : ListView.builder(
-                padding: const EdgeInsets.only(bottom: 120),
-                itemCount: list.length,
-                itemBuilder: (context, index) {
-                  final task = list[index];
+              child: Obx(() {
+                if (controller.isLoading.value) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-                  return Dismissible(
-                    key: ValueKey(task.id),
-                    direction: DismissDirection.horizontal,
-
-                    // ===== VUỐT PHẢI → SỬA (NỀN XANH NHẸ) =====
-                    background: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      alignment: Alignment.centerLeft,
-                      padding: const EdgeInsets.only(left: 24),
-                      decoration: BoxDecoration(
-                        color: Colors.green.shade100,
-                        borderRadius: BorderRadius.circular(28),
-                      ),
-                      child: const Icon(Icons.edit, color: Colors.green),
+                if (controller.tasks.isEmpty) {
+                  return const Center(
+                    child: Text(
+                      "Không có công việc hôm nay 😴",
+                      style: TextStyle(color: Colors.grey),
                     ),
+                  );
+                }
 
-                    // ===== VUỐT TRÁI → XÓA (NỀN ĐỎ – GIỮ NGUYÊN) =====
-                    secondaryBackground: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.only(right: 24),
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        borderRadius: BorderRadius.circular(28),
+                return ListView.builder(
+                  padding: const EdgeInsets.only(bottom: 120),
+                  itemCount: controller.tasks.length,
+                  itemBuilder: (context, index) {
+                    final task = controller.tasks[index];
+
+                    return Dismissible(
+                      key: ValueKey(task.id),
+                      direction: DismissDirection.horizontal,
+
+                      // ===== VUỐT PHẢI → SỬA =====
+                      background: Container(
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.only(left: 24),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade100,
+                          borderRadius: BorderRadius.circular(28),
+                        ),
+                        child: const Icon(Icons.edit, color: Colors.green),
                       ),
-                      child: const Icon(Icons.delete, color: Colors.white),
-                    ),
 
-                    // ===== PHÂN BIỆT SỬA / XÓA =====
-                    confirmDismiss: (direction) async {
-                      if (direction == DismissDirection.startToEnd) {
-                        showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          shape: const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-                          ),
-                          builder: (_) => EditTaskBottomSheet(
-                            task: task,
-                            onSave: (updatedTask) {
-                              setState(() {
-                                list[index] = updatedTask;
-                              });
-                            },
-                          ),
-                        );
-                        return false; // không dismiss
-                      } else {
-                        // VUỐT TRÁI = XÓA
-                        return await showDialog<bool>(
-                          context: context,
-                          builder: (context) {
-                            return AlertDialog(
+                      // ===== VUỐT TRÁI → XÓA =====
+                      secondaryBackground: Container(
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.only(right: 24),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(28),
+                        ),
+                        child: const Icon(Icons.delete, color: Colors.white),
+                      ),
+
+                      // ===== PHÂN BIỆT SỬA / XÓA =====
+                      confirmDismiss: (direction) async {
+                        if (direction == DismissDirection.startToEnd) {
+                          // SỬA
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(
+                                top: Radius.circular(28),
+                              ),
+                            ),
+                            builder: (_) => EditTaskBottomSheet(
+                              task: task,
+                              onSave: (updatedTask) {
+                                // sửa trực tiếp trong controller
+                                controller.editTask(index, updatedTask);
+                              },
+                            ),
+                          );
+                          return false;
+                        } else {
+                          // XÓA
+                          final confirmed = await showDialog<bool>(
+                            context: context,
+                            builder: (_) => AlertDialog(
                               title: const Text("Xác nhận xóa"),
                               content: const Text(
                                 "Bạn có chắc chắn muốn xóa công việc này không?",
                               ),
                               actions: [
                                 TextButton(
-                                  onPressed: () => Navigator.pop(context, false),
+                                  onPressed: () =>
+                                      Navigator.pop(context, false),
                                   child: const Text("HỦY"),
                                 ),
                                 TextButton(
@@ -270,27 +300,29 @@ class _TaskListPageState extends State<TaskListPage> {
                                   ),
                                 ),
                               ],
-                            );
-                          },
+                            ),
+                          );
+                          if (confirmed == true) {
+                            await controller.deleteTask(index);
+                          }
+                          return confirmed;
+                        }
+                      },
+
+                      // ===== CHỈ CHẠY KHI XÓA =====
+                      onDismissed: (_) {
+                        controller.tasks.removeAt(index);
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Đã xóa công việc")),
                         );
-                      }
-                    },
+                      },
 
-                    // ===== CHỈ CHẠY KHI XÓA =====
-                    onDismissed: (_) {
-                      setState(() {
-                        list.removeAt(index);
-                      });
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Đã xóa công việc")),
-                      );
-                    },
-
-                    child: TaskCardWithStatus(task: task),
-                  );
-                },
-              ),
+                      child: TaskCardWithStatus(task: task),
+                    );
+                  },
+                );
+              }),
             ),
           ],
         ),
@@ -333,5 +365,3 @@ class _TaskListPageState extends State<TaskListPage> {
     return "$hour:$minute - $weekdayName, ${now.day} $monthName ${now.year}";
   }
 }
-
-
