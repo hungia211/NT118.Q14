@@ -6,6 +6,9 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'views/auth/login_page.dart';
 import 'firebase_options.dart';
 
+import 'package:get/get.dart';
+import '../../services/auth_service.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -13,6 +16,9 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   await initializeDateFormatting('vi_VN', null);
+
+  // đăng ký AuthService với GetX
+  Get.put(AuthService());
 
   runApp(const MyApp());
 }

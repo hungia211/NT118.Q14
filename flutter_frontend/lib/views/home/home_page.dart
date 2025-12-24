@@ -16,7 +16,10 @@ import '../tasks/add_task_page.dart';
 import '../tasks/task_list_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/user_service.dart';
+import 'package:get/get.dart';
+import '../../services/auth_service.dart';
 
+// import '../../services/auth_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -31,6 +34,9 @@ class _HomePageState extends State<HomePage> {
   final BookService bookService = BookService();
   final UserService userService = UserService();
 
+  late final AuthService authService;
+  late final String userId;
+
   String? userName;
 
   // các từ khóa đề xuất
@@ -42,13 +48,21 @@ class _HomePageState extends State<HomePage> {
 
   late final Future<List<Task>> _tasksFuture = taskService.getTasks();
   late final Future<List> _booksFuture = bookService.fetchBooks(
-    vietnamKeywords[
-    DateTime.now().millisecondsSinceEpoch % vietnamKeywords.length],
+    vietnamKeywords[DateTime.now().millisecondsSinceEpoch %
+        vietnamKeywords.length],
   );
 
   @override
   void initState() {
     super.initState();
+    authService = Get.find<AuthService>();
+    final uid = authService.currentUserId;
+    if (uid == null) {
+      // chưa login → redirect hoặc return
+      return;
+    }
+
+    userId = uid;
     _loadUser();
   }
 
@@ -61,7 +75,6 @@ class _HomePageState extends State<HomePage> {
       userName = data?['name'];
     });
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -115,12 +128,14 @@ class _HomePageState extends State<HomePage> {
                 child: InkWell(
                   onTap: () async {
                     final tasks = await _tasksFuture;
-                    final todayTasks = taskController.filterTasksForToday(tasks);
+                    final todayTasks = taskController.filterTasksForToday(
+                      tasks,
+                    );
 
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => TaskListPage(tasks: todayTasks),
+                        builder: (_) => TaskListPage(userId: userId),
                       ),
                     );
                   },
@@ -129,7 +144,6 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
 
-
             // BIG PLUS BUTTON
             Expanded(
               child: Center(
@@ -137,9 +151,7 @@ class _HomePageState extends State<HomePage> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => const AddTaskPage(),
-                      ),
+                      MaterialPageRoute(builder: (_) => const AddTaskPage()),
                     );
                   },
                   child: Container(
@@ -161,16 +173,19 @@ class _HomePageState extends State<HomePage> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => const StatisticsPage(),
-                      ),
+                      MaterialPageRoute(builder: (_) => const StatisticsPage()),
                     );
                   },
-                  child: Center(child: Icon(Icons.circle_outlined, size: 30, color: Colors.black)),
+                  child: Center(
+                    child: Icon(
+                      Icons.circle_outlined,
+                      size: 30,
+                      color: Colors.black,
+                    ),
+                  ),
                 ),
               ),
             ),
-
 
             // CALENDAR
             Expanded(
@@ -179,12 +194,16 @@ class _HomePageState extends State<HomePage> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => const CalendarPage(),
-                      ),
+                      MaterialPageRoute(builder: (_) => const CalendarPage()),
                     );
                   },
-                  child: Center(child: Icon(Icons.calendar_today, size: 28, color: Colors.black)),
+                  child: Center(
+                    child: Icon(
+                      Icons.calendar_today,
+                      size: 28,
+                      color: Colors.black,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -218,7 +237,10 @@ class _HomePageState extends State<HomePage> {
                         children: [
                           Icon(Icons.search, color: Colors.grey),
                           SizedBox(width: 8),
-                          Text("Tìm kiếm", style: TextStyle(color: Colors.grey)),
+                          Text(
+                            "Tìm kiếm",
+                            style: TextStyle(color: Colors.grey),
+                          ),
                         ],
                       ),
                     ),
@@ -246,11 +268,9 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 20),
 
               // WELCOME TEXT
-              Center (
-                child:Text(
-                  userName == null
-                      ? "Chào mừng bạn!"
-                      : "Chào mừng $userName!",
+              Center(
+                child: Text(
+                  userName == null ? "Chào mừng bạn!" : "Chào mừng $userName!",
                   style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -314,7 +334,7 @@ class _HomePageState extends State<HomePage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => TaskListPage(tasks: todayTasks),
+                              builder: (_) => TaskListPage(userId: userId),
                             ),
                           );
                         },
@@ -557,9 +577,7 @@ class _HomePageState extends State<HomePage> {
 
                     SizedBox(height: 12),
 
-                    Image(
-                      image: AssetImage("assets/images/performance.png"),
-                    ),
+                    Image(image: AssetImage("assets/images/performance.png")),
 
                     SizedBox(height: 8),
 
@@ -570,7 +588,6 @@ class _HomePageState extends State<HomePage> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-
 
                     SizedBox(height: 8),
 
@@ -636,10 +653,7 @@ class _HomePageState extends State<HomePage> {
                   const Text(
                     "Hồ Chí Minh",
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                   ),
 
                   const SizedBox(height: 4),
@@ -648,14 +662,10 @@ class _HomePageState extends State<HomePage> {
                   const Text(
                     "Chủ tịch nước Việt Nam",
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey,
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                 ],
               ),
-
 
               const SizedBox(height: 30),
             ],
@@ -783,7 +793,7 @@ Widget _buildClock() {
   return StreamBuilder<DateTime>(
     stream: Stream.periodic(
       const Duration(seconds: 60),
-          (_) => DateTime.now(),
+      (_) => DateTime.now(),
     ).startWith(DateTime.now()),
     builder: (context, snapshot) {
       final now = snapshot.data ?? DateTime.now();

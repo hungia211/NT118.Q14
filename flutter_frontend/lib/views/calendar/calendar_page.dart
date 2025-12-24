@@ -9,6 +9,8 @@ import '../../services/task_service.dart';
 import '../home/home_page.dart';
 import '../statistics/statistics_page.dart';
 import '../tasks/task_list_page.dart';
+import '../../services/auth_service.dart';
+import 'package:get/get.dart';
 
 class CalendarPage extends StatefulWidget {
   const CalendarPage({super.key});
@@ -23,6 +25,9 @@ class _CalendarPageState extends State<CalendarPage> {
   final controller = StatisticsController();
   final taskController = TaskController();
 
+  late final AuthService authService;
+  late final String userId;
+
   DateTime _focusedDay = DateTime.now();
   DateTime _selectedDay = DateTime.now();
   List<Task> _tasks = [];
@@ -31,19 +36,30 @@ class _CalendarPageState extends State<CalendarPage> {
   @override
   void initState() {
     super.initState();
+    authService = Get.find<AuthService>();
+    final uid = authService.currentUserId;
+    if (uid == null) {
+      // chưa login → redirect hoặc return
+      return;
+    }
+
+    userId = uid;
     _loadTasks();
   }
 
   Future<void> _loadTasks() async {
     final allTasks = await taskService.getTasks();
     setState(() {
-      _tasks = allTasks
-          .where((t) =>
-      t.startTime.year == _selectedDay.year &&
-          t.startTime.month == _selectedDay.month &&
-          t.startTime.day == _selectedDay.day)
-          .toList()
-        ..sort((a, b) => a.startTime.compareTo(b.startTime));
+      _tasks =
+          allTasks
+              .where(
+                (t) =>
+                    t.startTime.year == _selectedDay.year &&
+                    t.startTime.month == _selectedDay.month &&
+                    t.startTime.day == _selectedDay.day,
+              )
+              .toList()
+            ..sort((a, b) => a.startTime.compareTo(b.startTime));
     });
   }
 
@@ -108,9 +124,7 @@ class _CalendarPageState extends State<CalendarPage> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => const HomePage(),
-                      ),
+                      MaterialPageRoute(builder: (_) => const HomePage()),
                     );
                   },
                   child: const Icon(Icons.home, size: 30, color: Colors.black),
@@ -118,23 +132,28 @@ class _CalendarPageState extends State<CalendarPage> {
               ),
             ),
 
-
             // GRID
             Expanded(
               child: Center(
                 child: InkWell(
                   onTap: () async {
                     final tasks = await taskService.getTasks();
-                    final todayTasks = taskController.filterTasksForToday(tasks);
+                    final todayTasks = taskController.filterTasksForToday(
+                      tasks,
+                    );
 
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => TaskListPage(tasks: todayTasks),
+                        builder: (_) => TaskListPage(userId: userId),
                       ),
                     );
                   },
-                  child: const Icon(Icons.grid_view, size: 30, color: Colors.black),
+                  child: const Icon(
+                    Icons.grid_view,
+                    size: 30,
+                    color: Colors.black,
+                  ),
                 ),
               ),
             ),
@@ -160,12 +179,16 @@ class _CalendarPageState extends State<CalendarPage> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => const StatisticsPage(),
-                      ),
+                      MaterialPageRoute(builder: (_) => const StatisticsPage()),
                     );
                   },
-                  child: Center(child: Icon(Icons.circle_outlined, size: 30, color: Colors.black)),
+                  child: Center(
+                    child: Icon(
+                      Icons.circle_outlined,
+                      size: 30,
+                      color: Colors.black,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -179,7 +202,9 @@ class _CalendarPageState extends State<CalendarPage> {
                     color: Colors.green.shade100,
                     shape: BoxShape.circle,
                   ),
-                  child: Center(child: Icon(Icons.calendar_today, color: Colors.green)),
+                  child: Center(
+                    child: Icon(Icons.calendar_today, color: Colors.green),
+                  ),
                 ),
               ),
             ),
@@ -238,7 +263,8 @@ class _CalendarPageState extends State<CalendarPage> {
                       firstDay: DateTime.utc(2020, 1, 1),
                       lastDay: DateTime.utc(2030, 12, 31),
                       focusedDay: _focusedDay,
-                      selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                      selectedDayPredicate: (day) =>
+                          isSameDay(_selectedDay, day),
                       onDaySelected: _onDaySelected,
                       calendarFormat: CalendarFormat.month,
                       headerStyle: const HeaderStyle(
@@ -249,17 +275,31 @@ class _CalendarPageState extends State<CalendarPage> {
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
-                        leftChevronIcon: Icon(Icons.chevron_left, color: Colors.white),
-                        rightChevronIcon: Icon(Icons.chevron_right, color: Colors.white),
+                        leftChevronIcon: Icon(
+                          Icons.chevron_left,
+                          color: Colors.white,
+                        ),
+                        rightChevronIcon: Icon(
+                          Icons.chevron_right,
+                          color: Colors.white,
+                        ),
                       ),
                       daysOfWeekStyle: const DaysOfWeekStyle(
-                        weekdayStyle: TextStyle(color: Colors.white70, fontSize: 12),
-                        weekendStyle: TextStyle(color: Colors.white70, fontSize: 12),
+                        weekdayStyle: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                        ),
+                        weekendStyle: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                        ),
                       ),
                       calendarStyle: CalendarStyle(
                         defaultTextStyle: const TextStyle(color: Colors.white),
                         weekendTextStyle: const TextStyle(color: Colors.white),
-                        outsideTextStyle: const TextStyle(color: Colors.white38),
+                        outsideTextStyle: const TextStyle(
+                          color: Colors.white38,
+                        ),
                         todayDecoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.3),
                           shape: BoxShape.circle,
@@ -281,7 +321,10 @@ class _CalendarPageState extends State<CalendarPage> {
 
               // ===== SCHEDULE HEADER =====
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 8,
+                ),
                 child: Row(
                   children: [
                     Container(
@@ -365,16 +408,9 @@ class _CalendarPageState extends State<CalendarPage> {
             Container(
               width: 10,
               height: 10,
-              decoration: BoxDecoration(
-                color: color,
-                shape: BoxShape.circle,
-              ),
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
             ),
-            Container(
-              width: 2,
-              height: 60,
-              color: color.withOpacity(0.4),
-            ),
+            Container(width: 2, height: 60, color: color.withOpacity(0.4)),
           ],
         ),
         const SizedBox(width: 12),

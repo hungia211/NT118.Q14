@@ -1,6 +1,6 @@
 name: todo_app
 description: "A new Flutter project."
-publish_to: 'none'
+publish_to: "none"
 
 version: 1.0.0+1
 
@@ -22,11 +22,12 @@ dependencies:
   flutter_launcher_icons: ^0.13.1
   image_picker: ^1.0.4
 
+  get: ^4.6.6
+
   firebase_core: ^3.6.0
   firebase_auth: ^5.3.1
   cloud_firestore: ^5.4.3
   google_sign_in: ^6.2.1
-
 
 dev_dependencies:
   flutter_test:
@@ -44,7 +45,6 @@ flutter:
     - assets/images/default_book.png
     - assets/icon/
 
-
   fonts:
     - family: Inter
       fonts:
@@ -53,7 +53,6 @@ flutter:
           weight: 600
         - asset: assets/fonts/Inter_18pt-Bold.ttf
           weight: 700
-
 
 flutter_icons:
   android: true
@@ -69,4 +68,3 @@ flutter_native_splash:
   android_12:
     color: "#FFFFFF"
     image: assets/icon/icon.png
-
