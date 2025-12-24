@@ -279,7 +279,7 @@ class _TaskListPageState extends State<TaskListPage> {
                           return false;
                         } else {
                           // XÓA
-                          return await showDialog<bool>(
+                          final confirmed = await showDialog<bool>(
                             context: context,
                             builder: (_) => AlertDialog(
                               title: const Text("Xác nhận xóa"),
@@ -302,6 +302,10 @@ class _TaskListPageState extends State<TaskListPage> {
                               ],
                             ),
                           );
+                          if (confirmed == true) {
+                            await controller.deleteTask(index);
+                          }
+                          return confirmed;
                         }
                       },
 

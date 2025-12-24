@@ -54,6 +54,17 @@ class TaskController extends GetxController {
     }
   }
 
+  // Xóa task
+  Future<void> deleteTask(int index) async {
+    final task = tasks[index];
+    try {
+      await _taskService.deleteTask(task.id); // xóa DB
+      tasks.removeAt(index); // xóa local state
+    } catch (e) {
+      Get.snackbar("Lỗi", "Không thể xóa công việc");
+    }
+  }
+
   /// Lấy tất cả task của hôm nay
   List<Task> filterTasksForToday(List<Task> tasks) {
     final now = DateTime.now();

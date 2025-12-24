@@ -29,7 +29,7 @@ class TaskService {
     await doc.set({...task.toJson(), 'id': doc.id});
   }
 
-  // API Get Task List
+  // API Get Task List theo User ID
   Future<List<Task>> getTasksByUser(String userId) async {
     final snapshot = await _db
         .collection('tasks')
@@ -46,11 +46,13 @@ class TaskService {
         status: data['status'],
         startTime: DateTime.parse(data['startTime']),
         duration: data['duration'] != null
-            ? Duration(
-                minutes: data['duration'],
-              ) // giả sử lưu duration theo phút
+            ? Duration(minutes: data['duration']) // lưu duration theo phút
             : Duration.zero, // hoặc Duration? nếu model nullable
       );
     }).toList();
+  }
+
+  Future<void> deleteTask(String taskId) async {
+    await _taskRef.doc(taskId).delete();
   }
 }
