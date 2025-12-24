@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'views/auth/login_page.dart';
 import 'firebase_options.dart';
@@ -11,9 +12,9 @@ import '../../services/auth_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Khởi tạo Firebase TRƯỚC runApp
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  // Khởi tạo locale tiếng Việt cho intl
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   await initializeDateFormatting('vi_VN', null);
 
   // đăng ký AuthService với GetX
@@ -30,17 +31,27 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
 
-      // GLOBAL THEME APP
+      // THÊM LOCALIZATION DELEGATES
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('vi', 'VN'),
+        Locale('en', 'US'),
+      ],
+      locale: const Locale('vi', 'VN'),
+
       theme: ThemeData(
         useMaterial3: true,
         fontFamily: "Inter",
-
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2E7D32)),
-
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF2E7D32),
+        ),
         scaffoldBackgroundColor: const Color(0xFFF9FEFB),
       ),
 
-      // TRANG ĐẦU TIÊN
       home: LoginPage(),
     );
   }

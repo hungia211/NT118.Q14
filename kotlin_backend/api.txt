@@ -27,6 +27,8 @@ Sửa nội dung task
 PUT: /tasks/{id}
 Xóa task
 DELETE: /tasks/{id}
+them nhiều task
+POST: task//bulk
 
 #Statistics
 Lấy số phần trăm công việc đã hoàn thành

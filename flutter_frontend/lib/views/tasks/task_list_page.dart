@@ -318,11 +318,41 @@ class _TaskListPageState extends State<TaskListPage> {
                         );
                       },
 
-                      child: TaskCardWithStatus(task: task),
-                    );
-                  },
-                );
-              }),
+                    child: SizedBox(
+                      height: 140,
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          // ===== SHADOW DẠNG ĐẾ (GIỐNG LayeredTaskCard) =====
+                          Positioned(
+                            bottom: 4,
+                            left: 26,
+                            right: 16,
+                            child: Container(
+                              height: 120,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(28),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.08),
+                                    spreadRadius: 1,
+                                    blurRadius: 6,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+
+                          // ===== CARD CHÍNH =====
+                          Positioned.fill(
+                            child: TaskCardWithStatus(task: task),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
           ],
         ),
