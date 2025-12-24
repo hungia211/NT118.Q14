@@ -10,6 +10,7 @@ import '../../widgets/book_card.dart';
 import 'package:rxdart/rxdart.dart';
 
 import '../calendar/calendar_page.dart';
+import '../profile/profile_page.dart';
 import '../statistics/statistics_page.dart';
 import '../tasks/add_task_page.dart';
 import '../tasks/task_list_page.dart';
@@ -227,9 +228,17 @@ class _HomePageState extends State<HomePage> {
                     width: 16,
                   ), // ← thêm padding phải giữa Search và Avatar
 
-                  CircleAvatar(
-                    radius: 22,
-                    backgroundImage: AssetImage("assets/images/ava.png"),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const ProfilePage()),
+                      );
+                    },
+                    child: const CircleAvatar(
+                      radius: 22,
+                      backgroundImage: AssetImage("assets/images/ava.png"),
+                    ),
                   ),
                 ],
               ),
@@ -410,7 +419,7 @@ class _HomePageState extends State<HomePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          "Tạo mới 1 công việc!",
+                          "Đề xuất công việc!",
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
