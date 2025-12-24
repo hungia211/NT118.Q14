@@ -211,36 +211,25 @@ class _CalendarPageState extends State<CalendarPage> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          PopupMenuButton<String>(
+                          IconButton(
                             icon: const Icon(Icons.more_vert, color: Colors.white),
-                            onSelected: (value) async {
-                              if (value == 'pick_date') {
-                                final pickedDate = await showDatePicker(
-                                  context: context,
-                                  initialDate: _selectedDay,
-                                  firstDate: DateTime(2020),
-                                  lastDate: DateTime(2030),
-                                  locale: const Locale('vi', 'VN'),
-                                );
+                            onPressed: () async {
+                              final pickedDate = await showDatePicker(
+                                context: context,
+                                initialDate: _selectedDay,
+                                firstDate: DateTime(2020),
+                                lastDate: DateTime(2030),
+                              );
 
-                                if (pickedDate != null) {
-                                  setState(() {
-                                    _selectedDay = pickedDate;
-                                    _focusedDay = pickedDate;
-                                  });
-                                  _loadTasks();
-                                }
+                              if (pickedDate != null) {
+                                setState(() {
+                                  _selectedDay = pickedDate;
+                                  _focusedDay = pickedDate;
+                                });
+                                _loadTasks();
                               }
                             },
-                            itemBuilder: (_) => [
-                              const PopupMenuItem(
-                                value: 'pick_date',
-                                child: Text('Chọn ngày'),
-                              ),
-                            ],
                           ),
-
-
                         ],
                       ),
                     ),
@@ -296,24 +285,33 @@ class _CalendarPageState extends State<CalendarPage> {
                 child: Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.12),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3), // bóng rơi nhẹ xuống dưới
+                          ),
+                        ],
                       ),
                       child: const Text(
-                        "My Schedule",
+                        "Danh sách công việc",
                         style: TextStyle(fontWeight: FontWeight.w600),
                       ),
                     ),
                     const Spacer(),
                     Text(
                       DateFormat("dd MMMM yyyy", "vi_VN").format(_selectedDay),
-                      style: const TextStyle(color: Colors.white70),
+                      style: const TextStyle(color: Colors.black),
                     ),
                   ],
                 ),
               ),
+
+              const SizedBox(height: 16),
 
               // ===== TASK LIST =====
               if (_tasks.isEmpty)
@@ -336,15 +334,14 @@ class _CalendarPageState extends State<CalendarPage> {
                 ),
 
               // ===== VIEW ALL =====
-              if (_tasks.length > 3 && !_showAll)
+              if (_tasks.length > 3)
                 TextButton(
-                  onPressed: () => setState(() => _showAll = true),
-                  child: const Text(
-                    "View All",
-                    style: TextStyle(color: Colors.black),
+                  onPressed: () => setState(() => _showAll = !_showAll),
+                  child: Text(
+                    _showAll ? "Thu gọn" : "Xem tất cả",
+                    style: const TextStyle(color: Colors.black),
                   ),
                 ),
-
               const SizedBox(height: 20),
             ],
           ),
@@ -355,14 +352,14 @@ class _CalendarPageState extends State<CalendarPage> {
 
   Widget _buildTaskItem(Task task) {
     final timeStart = DateFormat('h:mm a').format(task.startTime);
-    final timeEnd = DateFormat('h:mm a')
-        .format(task.startTime.add(task.duration));
+    final timeEnd =
+    DateFormat('h:mm a').format(task.startTime.add(task.duration));
     final color = _getStatusColor(task.status);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // TIMELINE
+        // ===== TIMELINE =====
         Column(
           children: [
             Container(
@@ -382,40 +379,53 @@ class _CalendarPageState extends State<CalendarPage> {
         ),
         const SizedBox(width: 12),
 
-        // TASK CARD
+        // ===== TASK CARD =====
         Expanded(
           child: Container(
             margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "$timeStart - $timeEnd",
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 11,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  task.title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.10), // shadow nhẹ
+                  blurRadius: 4,
+                  offset: const Offset(5, 5), // đổ xuống dưới
                 ),
               ],
+            ),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "$timeStart - $timeEnd",
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 11,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    task.title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       ],
     );
   }
+
 }
