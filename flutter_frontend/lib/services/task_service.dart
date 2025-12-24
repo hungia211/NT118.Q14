@@ -52,7 +52,13 @@ class TaskService {
     }).toList();
   }
 
+  // API xóa task
   Future<void> deleteTask(String taskId) async {
     await _taskRef.doc(taskId).delete();
+  }
+
+  // Chỉnh sửa task
+  Future<void> updateTask(Task task) async {
+    await _taskRef.doc(task.id).update(task.toJson());
   }
 }

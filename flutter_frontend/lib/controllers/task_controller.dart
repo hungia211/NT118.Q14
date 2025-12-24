@@ -65,6 +65,16 @@ class TaskController extends GetxController {
     }
   }
 
+  // Chỉnh sửa Task
+  Future<void> editTask(int index, Task updatedTask) async {
+    try {
+      await _taskService.updateTask(updatedTask); // update DB
+      tasks[index] = updatedTask; // update local state
+    } catch (e) {
+      Get.snackbar("Lỗi", "Không thể cập nhật công việc");
+    }
+  }
+
   /// Lấy tất cả task của hôm nay
   List<Task> filterTasksForToday(List<Task> tasks) {
     final now = DateTime.now();

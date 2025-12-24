@@ -272,7 +272,7 @@ class _TaskListPageState extends State<TaskListPage> {
                               task: task,
                               onSave: (updatedTask) {
                                 // sửa trực tiếp trong controller
-                                controller.tasks[index] = updatedTask;
+                                controller.editTask(index, updatedTask);
                               },
                             ),
                           );

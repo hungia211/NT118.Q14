@@ -31,6 +31,11 @@ class Task {
     this.deadline,
   });
 
+  // Chuyển Task -> Map để lưu Firestore
+  Map<String, dynamic> toMap() {
+    return {'id': id, 'title': title, 'description': description};
+  }
+
   /// thời gian kết thúc (tự suy ra)
   DateTime get endTime => startTime.add(duration);
 
