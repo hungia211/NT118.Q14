@@ -53,6 +53,7 @@ class TaskController extends GetxController {
       final result = await _taskService.getTasksByUser(userId);
       print('Found ${result.length} tasks');
       tasks.assignAll(result);
+      tasks.refresh();
     } catch (e) {
       Get.snackbar('Error', e.toString());
       print('Error: $e');

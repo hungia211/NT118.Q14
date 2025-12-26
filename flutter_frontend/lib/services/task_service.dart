@@ -38,15 +38,34 @@ class TaskService {
 
     return snapshot.docs.map((doc) {
       final data = doc.data();
+
+      // ===== DEBUG LOG =====
+      print('----- TASK DOC -----');
+      print('id: ${doc.id}');
+      print('title: ${data['title']}');
+      print('status: ${data['status']}');
+      print('startTime raw: ${data['startTime']}');
+      print('duration raw: ${data['duration']}');
+      print(
+        'duration parsed: ${data['duration'] != null ? Duration(minutes: data['duration']) : Duration.zero}',
+      );
+      print('--------------------');
+
+      final raw = data['duration'];
+      print('duration raw: $raw, type: ${raw.runtimeType}');
+
       return Task(
         id: doc.id,
         userId: data['userId'],
         title: data['title'],
         description: data['description'],
         status: data['status'],
+        category: data['category'] as String? ?? 'other',
         startTime: DateTime.parse(data['startTime']),
-        duration: data['duration'] != null
-            ? Duration(minutes: data['duration']) // lưu duration theo phút
+        duration: data['durationMinutes'] != null
+            ? Duration(
+                minutes: data['durationMinutes'],
+              ) // lưu duration theo phút
             : Duration.zero, // hoặc Duration? nếu model nullable
       );
     }).toList();
