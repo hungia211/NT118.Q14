@@ -11,7 +11,13 @@ class TaskController extends GetxController {
   final RxBool isLoading = false.obs;
 
   // Add Task
-  Future<void> addTask({required String title, String? description}) async {
+  Future<void> addTask({
+    required String title,
+    String? description,
+    required String category,
+    required Duration duration,
+    required DateTime startTime,
+  }) async {
     if (title.trim().isEmpty) return;
     final user = FirebaseAuth.instance.currentUser;
     try {
@@ -23,8 +29,9 @@ class TaskController extends GetxController {
         title: title,
         description: description,
         status: 'todo', // mặc định
-        startTime: DateTime.now(),
-        duration: const Duration(minutes: 30),
+        category: category,
+        startTime: startTime,
+        duration: duration,
       );
 
       await _taskService.addTask(task);
