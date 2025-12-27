@@ -174,33 +174,13 @@ class _AddTaskPageState extends State<AddTaskPage> {
     }
   }
 
-  // void _createTask() {
-  //   final startTime = DateTime(
-  //     _selectedDate.year,
-  //     _selectedDate.month,
-  //     _selectedDate.day,
-  //     _selectedTime.hour,
-  //     _selectedTime.minute,
-  //   );
-
-  //   final newTask = Task(
-  //     id: DateTime.now().millisecondsSinceEpoch.toString(),
-  //     userId: user!.uid,
-  //     title: _titleController.text,
-  //     description: _descriptionController.text,
-  //     status: 'not-started',
-  //     category: _selectedCategory,
-  //     startTime: startTime,
-  //     duration: Duration(hours: _durationHours, minutes: _durationMinutes),
-  //   );
-
-  //   Navigator.push(
-  //     context,
-  //     MaterialPageRoute(
-  //       builder: (_) => TaskDetailPage(task: newTask, isNewTask: true),
-  //     ),
-  //   );
-  // }
+  Duration _buildDurationFromUI() {
+    return Duration(
+      hours: _durationHours,
+      minutes: _durationMinutes,
+      seconds: _durationSeconds,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -717,12 +697,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
           child: SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              // onPressed: () {
-              //   taskController.addTask(
-              //     title: _titleController.text,
-              //     description: _descriptionController.text,
-              //   );
-              // },
               onPressed: () {
                 final newTask = Task(
                   id: '',
@@ -730,9 +704,9 @@ class _AddTaskPageState extends State<AddTaskPage> {
                   title: _titleController.text,
                   description: _descriptionController.text,
                   status: 'todo',
-                  category: 'other',
+                  category: _selectedCategory,
                   startTime: DateTime.now(),
-                  duration: const Duration(minutes: 30),
+                  duration: _buildDurationFromUI(),
                 );
 
                 Navigator.push(

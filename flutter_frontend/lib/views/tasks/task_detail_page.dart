@@ -95,8 +95,24 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
     final title = _titleController.text;
     final description = _descriptionController.text;
 
+    final startTime = DateTime(
+      _selectedDate.year,
+      _selectedDate.month,
+      _selectedDate.day,
+      _selectedTime.hour,
+      _selectedTime.minute,
+    );
+
+    final duration = Duration(minutes: _durationMinutes);
+
     try {
-      await taskController.addTask(title: title, description: description);
+      await taskController.addTask(
+        title: title,
+        description: description,
+        category: _selectedCategory,
+        duration: duration,
+        startTime: startTime,
+      );
 
       // Khi addTask thành công, trở về HomePage
       Navigator.pushAndRemoveUntil(
