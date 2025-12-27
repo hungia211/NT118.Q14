@@ -26,7 +26,6 @@ class _ProfilePageState extends State<ProfilePage> {
   final TaskController taskController = TaskController();
 
   String? userName;
-  String? userBio;
   String? profileImageUrl;
   File? _imageFile;
 
@@ -43,7 +42,6 @@ class _ProfilePageState extends State<ProfilePage> {
     final data = await userService.getUser(uid);
     setState(() {
       userName = data?['name'] ?? 'Người dùng';
-      userBio = data?['bio'] ?? 'Chào mừng đến với ứng dụng!';
       profileImageUrl = data?['profileImage'];
     });
   }
@@ -128,7 +126,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
   void _showEditProfileDialog() {
     final nameController = TextEditingController(text: userName);
-    final bioController = TextEditingController(text: userBio);
 
     showDialog(
       context: context,
@@ -171,13 +168,6 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ),
             const SizedBox(height: 12),
-            TextField(
-              controller: bioController,
-              decoration: const InputDecoration(
-                labelText: 'Giới thiệu',
-                border: OutlineInputBorder(),
-              ),
-            ),
           ],
         ),
         actions: [
@@ -195,7 +185,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 // });
                 setState(() {
                   userName = nameController.text;
-                  userBio = bioController.text;
                 });
               }
               Navigator.pop(context);
@@ -226,7 +215,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   width: double.infinity,
                   decoration: const BoxDecoration(
                     image: DecorationImage(
-                      image: AssetImage('assets/images/cover.png'),
+                      image: AssetImage('assets/images/cover.jpg'),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -245,7 +234,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             children: [
                               InkWell(
                                 onTap: () => Navigator.pop(context),
-                                child: const Icon(Icons.arrow_back_ios, color: Colors.green),
+                                child: const Icon(Icons.arrow_back_ios, color: Colors.black),
                               ),
                             ],
                           ),
@@ -288,21 +277,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 : const AssetImage('assets/images/ava.png') as ImageProvider,
                           ),
                         ),
-                        Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: GestureDetector(
-                            onTap: _showImagePickerDialog,
-                            child: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade700,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.camera_alt, size: 16, color: Colors.white),
-                            ),
-                          ),
-                        ),
+
                       ],
                     ),
                   ),
@@ -321,7 +296,7 @@ class _ProfilePageState extends State<ProfilePage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 40),
               child: Text(
-                userBio ?? 'Chào mừng đến với ứng dụng!',
+                'Chào mừng đến với ứng dụng!',
                 textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 13, color: Colors.grey),
               ),
@@ -443,9 +418,12 @@ class _ProfilePageState extends State<ProfilePage> {
           Expanded(
             child: InkWell(
               onTap: () async {
-                final tasks = await taskService.getTasks();
-                final todayTasks = taskController.filterTasksForToday(tasks);
-                Navigator.push(context, MaterialPageRoute(builder: (_) => TaskListPage(tasks: todayTasks)));
+                final uid = FirebaseAuth.instance.currentUser?.uid;
+                if (uid == null) return;
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => TaskListPage(userId: uid)),
+                );
               },
               child: const Icon(Icons.grid_view, size: 30),
             ),

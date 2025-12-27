@@ -143,7 +143,7 @@ class _SettingsPageState extends State<SettingsPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.chevron_left, color: Colors.green, size: 32),
+          icon: const Icon(Icons.chevron_left, color: Colors.black, size: 32),
           onPressed: () => Navigator.pop(context),
         ),
       ),
