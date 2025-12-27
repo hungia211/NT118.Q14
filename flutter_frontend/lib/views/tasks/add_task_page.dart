@@ -668,7 +668,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
 
                 const Text(
                   'Khi nào bắt đầu?',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
                 ),
                 const SizedBox(height: 15),
 
@@ -851,6 +851,13 @@ class _AddTaskPageState extends State<AddTaskPage> {
       decoration: BoxDecoration(
         color: Colors.green.shade400,
         borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.12), // shadow nhẹ
+            blurRadius: 6,
+            offset: const Offset(6, 6), // rơi xuống dưới
+          ),
+        ],
       ),
       child: Column(
         children: [

@@ -268,39 +268,42 @@ class _TaskListPageState extends State<TaskListPage> {
                                 top: Radius.circular(28),
                               ),
                             ),
-                            builder: (_) => EditTaskBottomSheet(
-                              task: task,
-                              onSave: (updatedTask) {
-                                // sửa trực tiếp trong controller
-                                controller.editTask(index, updatedTask);
-                              },
-                            ),
+                            builder: (_) =>
+                                EditTaskBottomSheet(
+                                  task: task,
+                                  onSave: (updatedTask) {
+                                    // sửa trực tiếp trong controller
+                                    controller.editTask(index, updatedTask);
+                                  },
+                                ),
                           );
                           return false;
                         } else {
                           // XÓA
                           final confirmed = await showDialog<bool>(
                             context: context,
-                            builder: (_) => AlertDialog(
-                              title: const Text("Xác nhận xóa"),
-                              content: const Text(
-                                "Bạn có chắc chắn muốn xóa công việc này không?",
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () =>
-                                      Navigator.pop(context, false),
-                                  child: const Text("HỦY"),
-                                ),
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context, true),
-                                  child: const Text(
-                                    "XÓA",
-                                    style: TextStyle(color: Colors.red),
+                            builder: (_) =>
+                                AlertDialog(
+                                  title: const Text("Xác nhận xóa"),
+                                  content: const Text(
+                                    "Bạn có chắc chắn muốn xóa công việc này không?",
                                   ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, false),
+                                      child: const Text("HỦY"),
+                                    ),
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, true),
+                                      child: const Text(
+                                        "XÓA",
+                                        style: TextStyle(color: Colors.red),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
                           );
                           if (confirmed == true) {
                             await controller.deleteTask(index);
@@ -318,41 +321,42 @@ class _TaskListPageState extends State<TaskListPage> {
                         );
                       },
 
-                    child: SizedBox(
-                      height: 140,
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          // ===== SHADOW DẠNG ĐẾ (GIỐNG LayeredTaskCard) =====
-                          Positioned(
-                            bottom: 4,
-                            left: 26,
-                            right: 16,
-                            child: Container(
-                              height: 120,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(28),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.08),
-                                    spreadRadius: 1,
-                                    blurRadius: 6,
-                                  ),
-                                ],
+                      child: SizedBox(
+                        height: 140,
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            // ===== SHADOW DẠNG ĐẾ (GIỐNG LayeredTaskCard) =====
+                            Positioned(
+                              bottom: 4,
+                              left: 26,
+                              right: 16,
+                              child: Container(
+                                height: 120,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(28),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.08),
+                                      spreadRadius: 1,
+                                      blurRadius: 6,
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
 
-                          // ===== CARD CHÍNH =====
-                          Positioned.fill(
-                            child: TaskCardWithStatus(task: task),
-                          ),
-                        ],
+                            // ===== CARD CHÍNH =====
+                            Positioned.fill(
+                              child: TaskCardWithStatus(task: task),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                },
-              ),
+                    );
+                  },
+                );
+              }),
             ),
           ],
         ),
