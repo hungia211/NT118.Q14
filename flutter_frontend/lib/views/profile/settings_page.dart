@@ -36,79 +36,150 @@ class _SettingsPageState extends State<SettingsPage> {
     final newPasswordController = TextEditingController();
     final confirmPasswordController = TextEditingController();
 
+    bool isLoading = false;
+
+    void showError(String msg) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    }
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Đổi mật khẩu'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: currentPasswordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Mật khẩu hiện tại',
-                border: OutlineInputBorder(),
+      barrierDismissible: isLoading,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setLocalState) {
+            return AlertDialog(
+              title: const Text('Đổi mật khẩu'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: currentPasswordController,
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Mật khẩu hiện tại',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: newPasswordController,
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Mật khẩu mới',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: confirmPasswordController,
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Xác nhận mật khẩu mới',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: newPasswordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Mật khẩu mới',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: confirmPasswordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Xác nhận mật khẩu mới',
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Hủy'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (newPasswordController.text !=
-                  confirmPasswordController.text) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Mật khẩu xác nhận không khớp')),
-                );
-                return;
-              }
+              actions: [
+                TextButton(
+                  onPressed: isLoading ? null : () => Navigator.pop(context),
+                  child: const Text('Hủy'),
+                ),
+                ElevatedButton(
+                  onPressed: isLoading
+                      ? null
+                      : () async {
+                          final current = currentPasswordController.text.trim();
+                          final newPass = newPasswordController.text.trim();
+                          final confirm = confirmPasswordController.text.trim();
 
-              try {
-                final credential = EmailAuthProvider.credential(
-                  email: user?.email ?? '',
-                  password: currentPasswordController.text,
-                );
-                await user?.reauthenticateWithCredential(credential);
-                await user?.updatePassword(newPasswordController.text);
+                          // ===== VALIDATE =====
+                          if (current.isEmpty ||
+                              newPass.isEmpty ||
+                              confirm.isEmpty) {
+                            showError('Vui lòng nhập đầy đủ thông tin');
+                            return;
+                          }
 
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Đổi mật khẩu thành công')),
-                );
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Đổi mật khẩu thất bại')),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-            child: const Text('Lưu', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
+                          if (newPass.length < 6) {
+                            showError('Mật khẩu mới phải ≥ 6 ký tự');
+                            return;
+                          }
+
+                          if (current == newPass) {
+                            showError(
+                              'Mật khẩu mới không được trùng mật khẩu cũ',
+                            );
+                            return;
+                          }
+
+                          if (newPass != confirm) {
+                            showError('Mật khẩu xác nhận không khớp');
+                            return;
+                          }
+
+                          // ===== FIREBASE =====
+                          setLocalState(() => isLoading = true);
+                          try {
+                            final credential = EmailAuthProvider.credential(
+                              email: user!.email!,
+                              password: current,
+                            );
+
+                            await user!.reauthenticateWithCredential(
+                              credential,
+                            );
+                            await user!.updatePassword(newPass);
+
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Đổi mật khẩu thành công'),
+                              ),
+                            );
+                          } on FirebaseAuthException catch (e) {
+                            switch (e.code) {
+                              case 'wrong-password':
+                                showError('Mật khẩu hiện tại không đúng');
+                                break;
+                              case 'weak-password':
+                                showError('Mật khẩu mới quá yếu');
+                                break;
+                              case 'requires-recent-login':
+                                showError(
+                                  'Vui lòng đăng nhập lại để đổi mật khẩu',
+                                );
+                                break;
+                              default:
+                                showError('Đổi mật khẩu thất bại');
+                            }
+                          } finally {
+                            setLocalState(() => isLoading = false);
+                          }
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                  ),
+                  child: isLoading
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text(
+                          'Lưu',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
