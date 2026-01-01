@@ -2,6 +2,7 @@ import '../models/task.dart';
 import 'package:get/get.dart';
 import '../services/task_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 
 class TaskController extends GetxController {
   final TaskService _taskService = TaskService();
@@ -9,6 +10,8 @@ class TaskController extends GetxController {
 
   final RxList<Task> tasks = <Task>[].obs;
   final RxBool isLoading = false.obs;
+
+  final RxMap<String, double> dailyProgress = <String, double>{}.obs;
 
   // Add Task
   Future<void> addTask({
@@ -156,5 +159,33 @@ class TaskController extends GetxController {
 
       return task;
     }).toList();
+  }
+
+  // Thống kê theo ngày
+  Future<void> loadDailyProgress(String userId) async {
+    isLoading.value = true;
+
+    final tasks = await _taskService.getTasksByUser(userId);
+
+    final Map<String, List<Task>> groupByDate = {};
+
+    for (final task in tasks) {
+      final dateKey = DateFormat(
+        'dd/MM',
+      ).format(task.startTime); // group theo ngày
+
+      groupByDate.putIfAbsent(dateKey, () => []);
+      groupByDate[dateKey]!.add(task);
+    }
+
+    final Map<String, double> result = {};
+
+    groupByDate.forEach((date, tasks) {
+      final done = tasks.where((t) => t.status == 'done').length;
+      result[date] = tasks.isEmpty ? 0 : done / tasks.length;
+    });
+
+    dailyProgress.value = result;
+    isLoading.value = false;
   }
 }

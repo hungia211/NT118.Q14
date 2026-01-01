@@ -13,10 +13,10 @@ class TaskService {
   Future<List<Task>> getTasks() async {
     try {
       final querySnapshot = await _taskRef.get();
-      final tasks = querySnapshot.docs
-          .map((doc) => Task.fromJson(doc.data()))
+
+      return querySnapshot.docs
+          .map((doc) => Task.fromFirestore(doc.id, doc.data()))
           .toList();
-      return tasks;
     } catch (e) {
       throw Exception("Error loading tasks from Firestore: $e");
     }
@@ -26,7 +26,7 @@ class TaskService {
   Future<void> addTask(Task task) async {
     final doc = _taskRef.doc();
 
-    await doc.set({...task.toJson(), 'id': doc.id});
+    await doc.set({...task.toFirestore(), 'id': doc.id});
   }
 
   // API Get Task List theo User ID
@@ -61,12 +61,16 @@ class TaskService {
         description: data['description'],
         status: data['status'],
         category: data['category'] as String? ?? 'other',
-        startTime: DateTime.parse(data['startTime']),
+        startTime: (data['startTime'] as Timestamp).toDate(),
+
+        // duration lưu INT phút
         duration: data['durationMinutes'] != null
-            ? Duration(
-                minutes: data['durationMinutes'],
-              ) // lưu duration theo phút
-            : Duration.zero, // hoặc Duration? nếu model nullable
+            ? Duration(minutes: data['durationMinutes'])
+            : Duration.zero,
+
+        deadline: data['deadline'] != null
+            ? (data['deadline'] as Timestamp).toDate()
+            : null,
       );
     }).toList();
   }

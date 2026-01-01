@@ -46,6 +46,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid != null) {
       userController.loadUser(uid);
+      taskController.loadDailyProgress(uid);
     }
     _loadUser();
   }
@@ -413,25 +414,40 @@ class _ProfilePageState extends State<ProfilePage> {
             const SizedBox(height: 20),
 
             // Progress bars
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 30),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  _buildProgressBar('28/02', 0.5, Colors.green),
-                  _buildProgressBar('29/02', 0.7, Colors.green),
-                  _buildProgressBar(
-                    '30/02',
-                    0.4,
-                    Colors.orange,
-                    label: 'Đang làm',
-                  ),
-                  _buildProgressBar('31/02', 0.6, Colors.red),
-                  _buildProgressBar('Hôm nay', 0.3, Colors.green.shade800),
-                ],
-              ),
-            ),
+            Obx(() {
+              if (taskController.isLoading.value) {
+                return const CircularProgressIndicator();
+              }
+
+              final entries = taskController.dailyProgress.entries.toList();
+
+              if (entries.isEmpty) {
+                return const Text(
+                  'Chưa có dữ liệu task',
+                  style: TextStyle(color: Colors.grey),
+                );
+              }
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 30),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: entries.take(5).map((e) {
+                    final progress = e.value;
+                    return _buildProgressBar(
+                      e.key,
+                      progress,
+                      progress >= 0.7
+                          ? Colors.green
+                          : progress >= 0.4
+                          ? Colors.orange
+                          : Colors.red,
+                    );
+                  }).toList(),
+                ),
+              );
+            }),
 
             const SizedBox(height: 30),
 
