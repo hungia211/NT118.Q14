@@ -11,7 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_localizations:
-      sdk: flutter
+    sdk: flutter
   cupertino_icons: ^1.0.8
   http: ^1.2.0
   intl: ^0.20.2
@@ -29,6 +29,8 @@ dependencies:
   cloud_firestore: ^5.4.3
   google_sign_in: ^6.2.1
 
+  flutter_dotenv: ^5.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -44,6 +46,7 @@ flutter:
     - assets/mock/tasks.json
     - assets/images/default_book.png
     - assets/icon/
+    - .env
 
   fonts:
     - family: Inter

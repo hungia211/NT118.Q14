@@ -11,7 +11,8 @@ import '../calendar/calendar_page.dart';
 import '../../services/task_service.dart';
 import '../../controllers/task_controller.dart';
 import 'settings_page.dart';
-
+import '../../controllers/user_controller.dart';
+import 'package:get/get.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -25,13 +26,27 @@ class _ProfilePageState extends State<ProfilePage> {
   final TaskService taskService = TaskService();
   final TaskController taskController = TaskController();
 
+  late final UserController userController;
+
+  File? _tempAvatarFile;
+
+  final user = FirebaseAuth.instance.currentUser;
+
   String? userName;
-  String? profileImageUrl;
+  // String? profileImageUrl;
   File? _imageFile;
 
   @override
   void initState() {
     super.initState();
+
+    Get.lazyPut<UserController>(() => UserController(), fenix: true);
+    userController = Get.find<UserController>();
+
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null) {
+      userController.loadUser(uid);
+    }
     _loadUser();
   }
 
@@ -42,7 +57,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final data = await userService.getUser(uid);
     setState(() {
       userName = data?['name'] ?? 'Người dùng';
-      profileImageUrl = data?['profileImage'];
+      // profileImageUrl = data?['avatarUrl'];
     });
   }
 
@@ -118,7 +133,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final picked = await picker.pickImage(source: source);
     if (picked != null) {
       setState(() {
-        _imageFile = File(picked.path);
+        _tempAvatarFile = File(picked.path);
       });
       // TODO: Upload to Firebase Storage and update user profile
     }
@@ -126,6 +141,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   void _showEditProfileDialog() {
     final nameController = TextEditingController(text: userName);
+    _tempAvatarFile = null;
 
     showDialog(
       context: context,
@@ -138,12 +154,23 @@ class _ProfilePageState extends State<ProfilePage> {
               onTap: _showImagePickerDialog,
               child: Stack(
                 children: [
-                  CircleAvatar(
-                    radius: 40,
-                    backgroundImage: _imageFile != null
-                        ? FileImage(_imageFile!)
-                        : const AssetImage('assets/images/ava.png') as ImageProvider,
-                  ),
+                  Obx(() {
+                    final avatarUrl = userController.avatarUrl.value;
+
+                    ImageProvider imageProvider;
+                    if (_tempAvatarFile != null) {
+                      imageProvider = FileImage(_tempAvatarFile!);
+                    } else if (avatarUrl.isNotEmpty) {
+                      imageProvider = NetworkImage(avatarUrl);
+                    } else {
+                      imageProvider = const AssetImage('assets/images/ava.png');
+                    }
+
+                    return CircleAvatar(
+                      radius: 40,
+                      backgroundImage: imageProvider,
+                    );
+                  }),
                   Positioned(
                     bottom: 0,
                     right: 0,
@@ -153,13 +180,19 @@ class _ProfilePageState extends State<ProfilePage> {
                         color: Colors.green,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.edit, size: 16, color: Colors.white),
+                      child: const Icon(
+                        Icons.edit,
+                        size: 16,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
+
             const SizedBox(height: 16),
+
             TextField(
               controller: nameController,
               decoration: const InputDecoration(
@@ -167,6 +200,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 border: OutlineInputBorder(),
               ),
             ),
+
             const SizedBox(height: 12),
           ],
         ),
@@ -178,15 +212,25 @@ class _ProfilePageState extends State<ProfilePage> {
           ElevatedButton(
             onPressed: () async {
               final uid = FirebaseAuth.instance.currentUser?.uid;
-              if (uid != null) {
-                // await userService.updateUser(uid, {
-                //   'name': nameController.text,
-                //   'bio': bioController.text,
-                // });
-                setState(() {
-                  userName = nameController.text;
-                });
+              if (uid == null) return;
+
+              // 1️⃣ Upload avatar nếu có chọn mới
+              if (_tempAvatarFile != null) {
+                await userController.changeAvatarWithFile(
+                  uid,
+                  _tempAvatarFile!,
+                );
               }
+
+              // 2️⃣ Update tên
+              await userService.updateUser(uid, {
+                'name': nameController.text.trim(),
+              });
+
+              setState(() {
+                userName = nameController.text.trim();
+              });
+
               Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
@@ -224,7 +268,10 @@ class _ProfilePageState extends State<ProfilePage> {
                 // Nút back và icon camera
                 SafeArea(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -234,7 +281,10 @@ class _ProfilePageState extends State<ProfilePage> {
                             children: [
                               InkWell(
                                 onTap: () => Navigator.pop(context),
-                                child: const Icon(Icons.arrow_back_ios, color: Colors.black),
+                                child: const Icon(
+                                  Icons.arrow_back_ios,
+                                  color: Colors.black,
+                                ),
                               ),
                             ],
                           ),
@@ -243,15 +293,20 @@ class _ProfilePageState extends State<ProfilePage> {
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (_) => const SettingsPage()),
+                              MaterialPageRoute(
+                                builder: (_) => const SettingsPage(),
+                              ),
                             );
                           },
                           child: Container(
                             padding: const EdgeInsets.all(8),
-                            child: const Icon(Icons.more_vert, color: Colors.black, size: 28),
+                            child: const Icon(
+                              Icons.more_vert,
+                              color: Colors.black,
+                              size: 28,
+                            ),
                           ),
                         ),
-
                       ],
                     ),
                   ),
@@ -268,16 +323,39 @@ class _ProfilePageState extends State<ProfilePage> {
                         Container(
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 4),
+                            border: Border.all(
+                              color: const Color.fromARGB(255, 254, 251, 251),
+                              width: 4,
+                            ),
                           ),
-                          child: CircleAvatar(
-                            radius: 50,
-                            backgroundImage: _imageFile != null
-                                ? FileImage(_imageFile!)
-                                : const AssetImage('assets/images/ava.png') as ImageProvider,
-                          ),
-                        ),
+                          child: Obx(() {
+                            print(
+                              'AVATAR URL = "${userController.avatarUrl.value}"',
+                            );
 
+                            final avatar =
+                                userController.avatarUrl.value.isNotEmpty
+                                ? userController.avatarUrl.value
+                                : null;
+                            // : user.avatarUrl;
+
+                            return Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                CircleAvatar(
+                                  radius: 50,
+                                  backgroundImage:
+                                      avatar != null && avatar.isNotEmpty
+                                      ? NetworkImage(avatar)
+                                      : null,
+                                  child: avatar == null || avatar.isEmpty
+                                      ? const Icon(Icons.person, size: 40)
+                                      : null,
+                                ),
+                              ],
+                            );
+                          }),
+                        ),
                       ],
                     ),
                   ),
@@ -310,12 +388,18 @@ class _ProfilePageState extends State<ProfilePage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.grey.shade200,
                 foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 10,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
               ),
-              child: const Text('Sửa thông tin', style: TextStyle(fontWeight: FontWeight.w600)),
+              child: const Text(
+                'Sửa thông tin',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
             ),
 
             const SizedBox(height: 30),
@@ -337,7 +421,12 @@ class _ProfilePageState extends State<ProfilePage> {
                 children: [
                   _buildProgressBar('28/02', 0.5, Colors.green),
                   _buildProgressBar('29/02', 0.7, Colors.green),
-                  _buildProgressBar('30/02', 0.4, Colors.orange, label: 'Đang làm'),
+                  _buildProgressBar(
+                    '30/02',
+                    0.4,
+                    Colors.orange,
+                    label: 'Đang làm',
+                  ),
                   _buildProgressBar('31/02', 0.6, Colors.red),
                   _buildProgressBar('Hôm nay', 0.3, Colors.green.shade800),
                 ],
@@ -364,7 +453,10 @@ class _ProfilePageState extends State<ProfilePage> {
                     borderRadius: BorderRadius.circular(25),
                   ),
                 ),
-                child: const Text('Xem lịch sử', style: TextStyle(fontWeight: FontWeight.w600)),
+                child: const Text(
+                  'Xem lịch sử',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
               ),
             ),
 
@@ -375,7 +467,12 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildProgressBar(String date, double progress, Color color, {String? label}) {
+  Widget _buildProgressBar(
+    String date,
+    double progress,
+    Color color, {
+    String? label,
+  }) {
     return Column(
       children: [
         if (label != null)
@@ -398,20 +495,34 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _buildBottomNav() {
     return Container(
       height: 60 + MediaQuery.of(context).padding.bottom,
-      padding: EdgeInsets.fromLTRB(10, 20, 10, MediaQuery.of(context).padding.bottom),
+      padding: EdgeInsets.fromLTRB(
+        10,
+        20,
+        10,
+        MediaQuery.of(context).padding.bottom,
+      ),
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(20),
           topRight: Radius.circular(20),
         ),
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, -3))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 10,
+            offset: Offset(0, -3),
+          ),
+        ],
       ),
       child: Row(
         children: [
           Expanded(
             child: InkWell(
-              onTap: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomePage())),
+              onTap: () => Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const HomePage()),
+              ),
               child: const Icon(Icons.home, size: 30),
             ),
           ),
@@ -430,23 +541,35 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           Expanded(
             child: InkWell(
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AddTaskPage())),
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AddTaskPage()),
+              ),
               child: Container(
                 padding: const EdgeInsets.all(10),
-                decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
+                decoration: const BoxDecoration(
+                  color: Colors.green,
+                  shape: BoxShape.circle,
+                ),
                 child: const Icon(Icons.add, size: 24, color: Colors.white),
               ),
             ),
           ),
           Expanded(
             child: InkWell(
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StatisticsPage())),
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const StatisticsPage()),
+              ),
               child: const Icon(Icons.circle_outlined, size: 30),
             ),
           ),
           Expanded(
             child: InkWell(
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CalendarPage())),
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const CalendarPage()),
+              ),
               child: const Icon(Icons.calendar_today, size: 28),
             ),
           ),

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/auth_service.dart';
 import '../auth/login_page.dart';
+import '../../controllers/user_controller.dart';
+import 'package:get/get.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -13,6 +15,8 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   final AuthService authService = AuthService();
   final user = FirebaseAuth.instance.currentUser;
+
+  final userController = Get.find<UserController>();
 
   bool _showEmail = false;
 
@@ -74,7 +78,8 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           ElevatedButton(
             onPressed: () async {
-              if (newPasswordController.text != confirmPasswordController.text) {
+              if (newPasswordController.text !=
+                  confirmPasswordController.text) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Mật khẩu xác nhận không khớp')),
                 );
@@ -124,11 +129,14 @@ class _SettingsPageState extends State<SettingsPage> {
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (_) => LoginPage()),
-                    (route) => false,
+                (route) => false,
               );
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Đăng xuất', style: TextStyle(color: Colors.white)),
+            child: const Text(
+              'Đăng xuất',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -160,6 +168,19 @@ class _SettingsPageState extends State<SettingsPage> {
               value: _showEmail ? (user?.email ?? '') : _maskEmail(user?.email),
               onReveal: () => setState(() => _showEmail = !_showEmail),
               revealText: _showEmail ? 'Ẩn' : 'Hiện',
+            ),
+
+            const SizedBox(height: 20),
+
+            // AVATAR
+            _buildActionRow(
+              label: 'ẢNH ĐẠI DIỆN',
+              value: 'Thay đổi ảnh đại diện',
+              buttonText: 'ĐỔI',
+              onPressed: () {
+                if (user == null) return;
+                userController.changeAvatar(user!.uid);
+              },
             ),
 
             const SizedBox(height: 20),
@@ -197,7 +218,10 @@ class _SettingsPageState extends State<SettingsPage> {
                       borderRadius: BorderRadius.circular(20),
                     ),
                   ),
-                  child: const Text('Đăng xuất', style: TextStyle(color: Colors.red)),
+                  child: const Text(
+                    'Đăng xuất',
+                    style: TextStyle(color: Colors.red),
+                  ),
                 ),
               ],
             ),
@@ -247,9 +271,14 @@ class _SettingsPageState extends State<SettingsPage> {
               onPressed: onPressed,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.black,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
-              child: Text(buttonText, style: const TextStyle(color: Colors.white, fontSize: 12)),
+              child: Text(
+                buttonText,
+                style: const TextStyle(color: Colors.white, fontSize: 12),
+              ),
             ),
           ],
         ),

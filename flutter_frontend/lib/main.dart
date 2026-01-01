@@ -9,16 +9,19 @@ import 'firebase_options.dart';
 import 'package:get/get.dart';
 import '../../services/auth_service.dart';
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await initializeDateFormatting('vi_VN', null);
 
   // đăng ký AuthService với GetX
   Get.put(AuthService());
+
+  // Chạy .env khi app start
+  await dotenv.load(fileName: ".env");
 
   runApp(const MyApp());
 }
@@ -37,18 +40,13 @@ class MyApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [
-        Locale('vi', 'VN'),
-        Locale('en', 'US'),
-      ],
+      supportedLocales: const [Locale('vi', 'VN'), Locale('en', 'US')],
       locale: const Locale('vi', 'VN'),
 
       theme: ThemeData(
         useMaterial3: true,
         fontFamily: "Inter",
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF2E7D32),
-        ),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2E7D32)),
         scaffoldBackgroundColor: const Color(0xFFF9FEFB),
       ),
 
