@@ -38,6 +38,7 @@ class _HomePageState extends State<HomePage> {
   late final String userId;
 
   String? userName;
+  String? avatarUrl;
 
   // các từ khóa đề xuất
   final List<String> vietnamKeywords = [
@@ -73,7 +74,9 @@ class _HomePageState extends State<HomePage> {
     final data = await userService.getUser(uid);
     setState(() {
       userName = data?['name'];
+      avatarUrl = data?['avatar_url'];
     });
+    print("HOME AVATAR URL = $avatarUrl");
   }
 
   @override
@@ -257,9 +260,13 @@ class _HomePageState extends State<HomePage> {
                         MaterialPageRoute(builder: (_) => const ProfilePage()),
                       );
                     },
-                    child: const CircleAvatar(
+                    child: CircleAvatar(
                       radius: 22,
-                      backgroundImage: AssetImage("assets/images/ava.png"),
+                      backgroundImage:
+                          avatarUrl != null && avatarUrl!.isNotEmpty
+                          ? NetworkImage(avatarUrl!)
+                          : const AssetImage("assets/images/ava.png")
+                                as ImageProvider,
                     ),
                   ),
                 ],

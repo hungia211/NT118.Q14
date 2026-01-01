@@ -34,7 +34,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   String? userName;
   // String? profileImageUrl;
-  File? _imageFile;
+  // File? _imageFile;
 
   @override
   void initState() {
