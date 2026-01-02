@@ -13,10 +13,10 @@ class TaskService {
   Future<List<Task>> getTasks() async {
     try {
       final querySnapshot = await _taskRef.get();
-      final tasks = querySnapshot.docs
-          .map((doc) => Task.fromJson(doc.data()))
+
+      return querySnapshot.docs
+          .map((doc) => Task.fromFirestore(doc.id, doc.data()))
           .toList();
-      return tasks;
     } catch (e) {
       throw Exception("Error loading tasks from Firestore: $e");
     }

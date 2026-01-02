@@ -97,6 +97,22 @@ class Task {
     );
   }
 
+  // fromFirestore
+  factory Task.fromFirestore(String id, Map<String, dynamic> data) {
+    return Task(
+      id: id,
+      userId: data['userId'],
+      title: data['title'],
+      description: data['description'],
+      status: data['status'],
+      category: data['category'] ?? 'other',
+      startTime: (data['startTime'] as Timestamp).toDate(),
+      duration: Duration(minutes: data['durationMinutes'] ?? 0),
+      deadline: data['deadline'] != null
+          ? (data['deadline'] as Timestamp).toDate()
+          : null,
+    );
+  }
 
   // toJson
   Map<String, dynamic> toJson() {
@@ -116,4 +132,17 @@ class Task {
     };
   }
 
+  // toFirestore
+  Map<String, dynamic> toFirestore() {
+    return {
+      'userId': userId,
+      'title': title,
+      'description': description,
+      'status': status,
+      'category': category,
+      'startTime': startTime, // ✅ DateTime
+      'durationMinutes': duration.inMinutes,
+      'deadline': deadline, // ✅ DateTime?
+    };
+  }
 }
