@@ -79,5 +79,239 @@
     "category": "relax",
     "startTime": "2025-12-15T22:00:00",
     "durationMinutes": 120
+  },
+  {
+    "id": "10",
+    "title": "Tưới cây cảnh",
+    "description": "Tưới nước cho vườn hoa hồng và cắt tỉa lá khô",
+    "status": "done",
+    "category": "gardening",
+    "startTime": "2025-12-23T06:00:00",
+    "durationMinutes": 45
+  },
+  {
+    "id": "11",
+    "title": "Thiền buổi sáng",
+    "description": "Thiền chánh niệm để bắt đầu ngày mới",
+    "status": "done",
+    "category": "meditation",
+    "startTime": "2025-12-23T05:00:00",
+    "durationMinutes": 15
+  },
+  {
+    "id": "12",
+    "title": "Fix bug Login",
+    "description": "Sửa lỗi crash app khi đăng nhập bằng Google",
+    "status": "in-progress",
+    "category": "work",
+    "startTime": "2025-12-23T09:00:00",
+    "durationMinutes": 180
+  },
+  {
+    "id": "13",
+    "title": "Mua đồ siêu thị",
+    "description": "Mua trái cây và nhu yếu phẩm cho tuần tới",
+    "status": "failed",
+    "category": "other",
+    "startTime": "2025-12-21T17:00:00",
+    "durationMinutes": 60
+  },
+  {
+    "id": "14",
+    "title": "Học từ vựng Tiếng Anh",
+    "description": "Ôn tập 50 từ vựng chủ đề Technology",
+    "status": "not-started",
+    "category": "study",
+    "startTime": "2025-12-23T20:00:00",
+    "durationMinutes": 45
+  },
+  {
+    "id": "15",
+    "title": "Làm bánh bông lan",
+    "description": "Thử công thức nướng bánh mới bằng nồi chiên không dầu",
+    "status": "not-started",
+    "category": "cook",
+    "startTime": "2025-12-24T15:00:00",
+    "durationMinutes": 90
+  },
+  {
+    "id": "16",
+    "title": "Chạy bộ công viên",
+    "description": "Chạy 5km quanh công viên gần nhà",
+    "status": "done",
+    "category": "health",
+    "startTime": "2025-12-20T17:30:00",
+    "durationMinutes": 60
+  },
+  {
+    "id": "17",
+    "title": "Nghe nhạc Lo-fi",
+    "description": "Thư giãn đầu óc trước khi ngủ",
+    "status": "in-progress",
+    "category": "relax",
+    "startTime": "2025-12-22T23:00:00",
+    "durationMinutes": 30
+  },
+  {
+    "id": "18",
+    "title": "Trồng thêm rau",
+    "description": "Gieo hạt cải ngọt và xà lách vào thùng xốp",
+    "status": "not-started",
+    "category": "gardening",
+    "startTime": "2025-12-25T07:00:00",
+    "durationMinutes": 120
+  },
+  {
+    "id": "19",
+    "title": "Thiền buông thư",
+    "description": "Bài tập thả lỏng cơ thể sau giờ làm",
+    "status": "failed",
+    "category": "meditation",
+    "startTime": "2025-12-21T18:00:00",
+    "durationMinutes": 20
+  },
+  {
+    "id": "20",
+    "title": "Dọn dẹp nhà cửa",
+    "description": "Hút bụi phòng khách và lau bàn ghế",
+    "status": "not-started",
+    "category": "other",
+    "startTime": "2025-12-24T08:00:00",
+    "durationMinutes": 120
+  },
+  {
+    "id": "21",
+    "title": "Viết báo cáo tuần",
+    "description": "Tổng hợp KPI và tiến độ dự án gửi quản lý",
+    "status": "done",
+    "category": "work",
+    "startTime": "2025-12-26T16:00:00",
+    "durationMinutes": 60
+  },
+  {
+    "id": "22",
+    "title": "Đọc sách Clean Code",
+    "description": "Đọc chương 3: Functions",
+    "status": "in-progress",
+    "category": "study",
+    "startTime": "2025-12-26T20:00:00",
+    "durationMinutes": 45
+  },
+  {
+    "id": "23",
+    "title": "Khám nha khoa",
+    "description": "Lấy cao răng định kỳ 6 tháng",
+    "status": "not-started",
+    "category": "health",
+    "startTime": "2025-12-28T09:00:00",
+    "durationMinutes": 60
+  },
+  {
+    "id": "24",
+    "title": "Chơi Game",
+    "description": "Leo rank cùng hội bạn",
+    "status": "failed",
+    "category": "relax",
+    "startTime": "2025-12-25T21:00:00",
+    "durationMinutes": 120
+  },
+  {
+    "id": "25",
+    "title": "Bón phân cho cây",
+    "description": "Bón phân hữu cơ cho chậu hồng trước nhà",
+    "status": "done",
+    "category": "gardening",
+    "startTime": "2025-12-24T06:30:00",
+    "durationMinutes": 30
+  },
+  {
+    "id": "26",
+    "title": "Nấu lẩu nấm",
+    "description": "Chuẩn bị nguyên liệu nấu lẩu chay cho cả nhà",
+    "status": "not-started",
+    "category": "cook",
+    "startTime": "2025-12-27T17:00:00",
+    "durationMinutes": 90
+  },
+  {
+    "id": "27",
+    "title": "Thiền trước khi ngủ",
+    "description": "Nghe nhạc tần số và thiền sâu",
+    "status": "done",
+    "category": "meditation",
+    "startTime": "2025-12-25T23:00:00",
+    "durationMinutes": 20
+  },
+  {
+    "id": "28",
+    "title": "Rửa xe máy",
+    "description": "Mang xe đi rửa và bảo dưỡng nhẹ",
+    "status": "failed",
+    "category": "other",
+    "startTime": "2025-12-26T10:00:00",
+    "durationMinutes": 45
+  },
+  {
+    "id": "29",
+    "title": "Review Code",
+    "description": "Kiểm tra Pull Request của team Frontend",
+    "status": "not-started",
+    "category": "work",
+    "startTime": "2025-12-27T14:00:00",
+    "durationMinutes": 60
+  },
+  {
+    "id": "30",
+    "title": "Học Design Pattern",
+    "description": "Tìm hiểu về Singleton và Factory pattern",
+    "status": "in-progress",
+    "category": "study",
+    "startTime": "2025-12-27T08:30:00",
+    "durationMinutes": 120
+  },
+  {
+    "id": "31",
+    "title": "Làm Salad trộn",
+    "description": "Làm salad cá ngừ cho bữa trưa healthy",
+    "status": "done",
+    "category": "cook",
+    "startTime": "2025-12-26T11:30:00",
+    "durationMinutes": 30
+  },
+  {
+    "id": "32",
+    "title": "Tập Yoga",
+    "description": "Bài tập giãn cơ lưng và vai gáy",
+    "status": "not-started",
+    "category": "health",
+    "startTime": "2025-12-29T06:00:00",
+    "durationMinutes": 45
+  },
+  {
+    "id": "33",
+    "title": "Tỉa cành mai",
+    "description": "Tỉa lá để chuẩn bị cho Tết",
+    "status": "failed",
+    "category": "gardening",
+    "startTime": "2025-12-26T15:00:00",
+    "durationMinutes": 120
+  },
+  {
+    "id": "34",
+    "title": "Đi cà phê một mình",
+    "description": "Ra quán quen ngồi đọc sách và thư giãn",
+    "status": "done",
+    "category": "relax",
+    "startTime": "2025-12-24T19:00:00",
+    "durationMinutes": 90
+  },
+  {
+    "id": "35",
+    "title": "Thiền 5 phút",
+    "description": "Tập trung hơi thở giữa giờ làm việc",
+    "status": "not-started",
+    "category": "meditation",
+    "startTime": "2025-12-27T10:00:00",
+    "durationMinutes": 5
   }
 ]

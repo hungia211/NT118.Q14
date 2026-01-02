@@ -238,7 +238,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => TaskListPage(userId: userId),
+                        builder: (_) => TaskListPage(),
                       ),
                     );
                   },
@@ -684,13 +684,18 @@ class _AddTaskPageState extends State<AddTaskPage> {
                       _buildTimeBox(amPm),
                     ],
                   ),
+
                 ),
+                const SizedBox(height: 10),
+
+                _buildCategoryCardWithTitle(),
+
               ],
             ),
           ),
         ),
 
-        _buildCategoryCardWithTitle(),
+
 
         Padding(
           padding: const EdgeInsets.all(20),
@@ -698,14 +703,24 @@ class _AddTaskPageState extends State<AddTaskPage> {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
+                // Lấy ngày hiện tại + giờ người dùng đã chọn
+                final now = DateTime.now();
+                final startDateTime = DateTime(
+                  now.year,
+                  now.month,
+                  now.day,
+                  _selectedTime.hour,
+                  _selectedTime.minute,
+                );
+
                 final newTask = Task(
                   id: '',
                   userId: FirebaseAuth.instance.currentUser!.uid,
                   title: _titleController.text,
                   description: _descriptionController.text,
-                  status: 'todo',
+                  status: 'not-started',
                   category: _selectedCategory,
-                  startTime: DateTime.now(),
+                  startTime: startDateTime, // Ngày hôm nay + giờ đã chọn
                   duration: _buildDurationFromUI(),
                 );
 
@@ -713,7 +728,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                   context,
                   MaterialPageRoute(
                     builder: (_) => TaskDetailPage(
-                      task: newTask, // <-- truyền đúng parameter
+                      task: newTask,
                       isNewTask: true,
                     ),
                   ),
@@ -819,53 +834,76 @@ class _AddTaskPageState extends State<AddTaskPage> {
 
   Widget _buildCategoryCardWithTitle() {
     final category = _categories[_selectedCategory]!;
+
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 40),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.green.shade400,
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.12), // shadow nhẹ
-            blurRadius: 6,
-            offset: const Offset(6, 6), // rơi xuống dưới
-          ),
-        ],
-      ),
-      child: Column(
+      margin: const EdgeInsets.symmetric(horizontal: 40, vertical: 30),
+      height: 220,
+      child: Stack(
+        clipBehavior: Clip.none, // cho phép tràn
+        alignment: Alignment.topCenter,
         children: [
-          Text(
-            _titleController.text,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+          // CARD CHÍNH
+          Positioned(
+            top: 50, // chừa chỗ cho ảnh tràn
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(20, 80, 20, 20),
+              decoration: BoxDecoration(
+                color: const Color(0xFF90CAF9),
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.15),
+                    blurRadius: 4,
+                    offset: const Offset(6, 6),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  // TITLE – TO, RÕ
+                  Text(
+                    _titleController.text,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
-            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 15),
-          Image.asset(
-            category['image'] as String,
-            width: 100,
-            height: 100,
-            fit: BoxFit.contain,
-            errorBuilder: (context, error, stackTrace) {
-              return Icon(
-                _getCategoryIcon(_selectedCategory),
-                size: 100,
-                color: Colors.white,
-              );
-            },
+
+          // ẢNH TRÀN RA NGOÀI (NHƯNG KIỂM SOÁT)
+          Positioned(
+            top: -10,
+            child: Image.asset(
+              category['image'] as String,
+              width: 150,
+              height: 150,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) {
+                return Icon(
+                  _getCategoryIcon(_selectedCategory),
+                  size: 130,
+                  color: Colors.white,
+                );
+              },
+            ),
           ),
         ],
       ),
     );
   }
 
-  // Widget _buildBottomNav() {
-  //
-  // }
+
+
+
 
   IconData _getCategoryIcon(String category) {
     switch (category) {

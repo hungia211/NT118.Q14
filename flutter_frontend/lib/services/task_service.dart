@@ -25,8 +25,10 @@ class TaskService {
   // API Add Task
   Future<void> addTask(Task task) async {
     final doc = _taskRef.doc();
-
-    await doc.set({...task.toJson(), 'id': doc.id});
+    await doc.set({
+      ...task.toJson(),
+      'id': doc.id,
+    });
   }
 
   // API Get Task List theo User ID
@@ -34,25 +36,11 @@ class TaskService {
     final snapshot = await _db
         .collection('tasks')
         .where('userId', isEqualTo: userId)
+        .orderBy('startTime', descending: false)
         .get();
 
     return snapshot.docs.map((doc) {
       final data = doc.data();
-
-      // ===== DEBUG LOG =====
-      print('----- TASK DOC -----');
-      print('id: ${doc.id}');
-      print('title: ${data['title']}');
-      print('status: ${data['status']}');
-      print('startTime raw: ${data['startTime']}');
-      print('duration raw: ${data['duration']}');
-      print(
-        'duration parsed: ${data['duration'] != null ? Duration(minutes: data['duration']) : Duration.zero}',
-      );
-      print('--------------------');
-
-      final raw = data['duration'];
-      print('duration raw: $raw, type: ${raw.runtimeType}');
 
       return Task(
         id: doc.id,
@@ -60,16 +48,87 @@ class TaskService {
         title: data['title'],
         description: data['description'],
         status: data['status'],
-        category: data['category'] as String? ?? 'other',
-        startTime: DateTime.parse(data['startTime']),
+        category: data['category'] ?? 'other',
+        startTime: (data['startTime'] as Timestamp).toDate(),
         duration: data['durationMinutes'] != null
-            ? Duration(
-                minutes: data['durationMinutes'],
-              ) // lưu duration theo phút
-            : Duration.zero, // hoặc Duration? nếu model nullable
+            ? Duration(minutes: data['durationMinutes'])
+            : Duration.zero,
       );
     }).toList();
   }
+
+  // API Get Today's Tasks theo User ID
+  Future<List<Task>> getTodayTasksByUser(String userId) async {
+    final now = DateTime.now();
+
+    final startOfDay = DateTime(now.year, now.month, now.day);
+    final endOfDay = startOfDay.add(const Duration(days: 1));
+
+    final snapshot = await _db
+        .collection('tasks')
+        .where('userId', isEqualTo: userId)
+        .where(
+      'startTime',
+      isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
+    )
+        .where(
+      'startTime',
+      isLessThan: Timestamp.fromDate(endOfDay),
+    )
+        .orderBy('startTime', descending: false)
+        .get();
+
+    return snapshot.docs.map((doc) {
+      final data = doc.data();
+
+      return Task(
+        id: doc.id,
+        userId: data['userId'],
+        title: data['title'],
+        description: data['description'],
+        status: data['status'],
+        category: data['category'] ?? 'other',
+        startTime: (data['startTime'] as Timestamp).toDate(),
+        duration: data['durationMinutes'] != null
+            ? Duration(minutes: data['durationMinutes'])
+            : Duration.zero,
+      );
+    }).toList();
+  }
+
+  // API Get Next Task theo User ID
+  Future<Task?> getNextTaskForUser(String userId) async {
+    final now = Timestamp.fromDate(DateTime.now());
+
+    final snapshot = await _db
+        .collection('tasks')
+        .where('userId', isEqualTo: userId)
+        .where('startTime', isGreaterThan: now)
+        .orderBy('startTime', descending: false)
+        .limit(1)
+        .get();
+
+    if (snapshot.docs.isEmpty) return null;
+
+    final doc = snapshot.docs.first;
+    final data = doc.data();
+
+    return Task(
+      id: doc.id,
+      userId: data['userId'],
+      title: data['title'],
+      description: data['description'],
+      status: data['status'],
+      category: data['category'] ?? 'other',
+      startTime: (data['startTime'] as Timestamp).toDate(),
+      duration: data['durationMinutes'] != null
+          ? Duration(minutes: data['durationMinutes'])
+          : Duration.zero,
+    );
+  }
+
+
+
 
   // API xóa task
   Future<void> deleteTask(String taskId) async {

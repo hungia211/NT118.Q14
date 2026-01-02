@@ -10,11 +10,10 @@ import '../home/home_page.dart';
 import '../statistics/statistics_page.dart';
 import 'package:get/get.dart';
 import '../../controllers/task_controller.dart';
+import 'add_task_page.dart';
 
 class TaskListPage extends StatefulWidget {
-  final String userId;
-
-  const TaskListPage({super.key, required this.userId});
+  const TaskListPage({super.key});
 
   @override
   State<TaskListPage> createState() => _TaskListPageState();
@@ -23,19 +22,17 @@ class TaskListPage extends StatefulWidget {
 class _TaskListPageState extends State<TaskListPage> {
   // late List<Task> list;
 
-  final TaskController controller = Get.put(TaskController());
+  final TaskController controller = Get.find<TaskController>();
 
   @override
   void initState() {
     super.initState();
 
-    // debug userId
-    print('TaskListPage userId: ${widget.userId}');
-
     // Đảm bảo Rx value chỉ được set sau khi widget build xong
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      controller.loadTasksByUser(widget.userId);
+      controller.loadTodayTasks();
     });
+
   }
 
   @override
@@ -102,13 +99,21 @@ class _TaskListPageState extends State<TaskListPage> {
             // BIG PLUS BUTTON
             Expanded(
               child: Center(
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: const BoxDecoration(
-                    color: Colors.green,
-                    shape: BoxShape.circle,
+                child: InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const AddTaskPage()),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: const BoxDecoration(
+                      color: Colors.green,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.add, size: 24, color: Colors.white),
                   ),
-                  child: const Icon(Icons.add, size: 24, color: Colors.white),
                 ),
               ),
             ),
@@ -207,20 +212,19 @@ class _TaskListPageState extends State<TaskListPage> {
                   return const Center(child: CircularProgressIndicator());
                 }
 
-                if (controller.tasks.isEmpty) {
-                  return const Center(
-                    child: Text(
-                      "Không có công việc hôm nay 😴",
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  );
+                final todayTasks =
+                controller.filterTasksForToday(controller.tasks);
+
+
+                if (todayTasks.isEmpty) {
+                  return const Center(child: Text("Không có công việc hôm nay 😴"));
                 }
 
                 return ListView.builder(
                   padding: const EdgeInsets.only(bottom: 120),
-                  itemCount: controller.tasks.length,
+                  itemCount: todayTasks.length,
                   itemBuilder: (context, index) {
-                    final task = controller.tasks[index];
+                    final task = todayTasks[index];
 
                     return Dismissible(
                       key: ValueKey(task.id),
@@ -314,8 +318,6 @@ class _TaskListPageState extends State<TaskListPage> {
 
                       // ===== CHỈ CHẠY KHI XÓA =====
                       onDismissed: (_) {
-                        controller.tasks.removeAt(index);
-
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text("Đã xóa công việc")),
                         );
