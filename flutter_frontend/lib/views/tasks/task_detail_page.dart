@@ -24,8 +24,17 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
   late int _durationMinutes;
   bool _isEditing = false;
 
+  // Hàm format giờ 12h với AM/PM
+  String _formatTime12h(TimeOfDay time) {
+    final int hour12 = time.hour == 0 ? 12 : (time.hour > 12 ? time.hour - 12 : time.hour);
+    final String minute = time.minute.toString().padLeft(2, '0');
+    final String amPm = time.hour >= 12 ? 'PM' : 'AM';
+    return '${hour12.toString().padLeft(2, '0')}:$minute $amPm';
+  }
+
   // Khai báo controller GetX
-  final TaskController taskController = Get.put(TaskController());
+  final TaskController taskController = Get.find<TaskController>();
+
 
   final Map<String, Map<String, dynamic>> _categories = {
     'work': {
@@ -114,18 +123,22 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
         startTime: startTime,
       );
 
-      // Khi addTask thành công, trở về HomePage
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const HomePage()),
-        (route) => false,
-      );
+      await taskController.loadTodayTasks();
+      await taskController.loadNextTaskForHome();
 
-      Get.snackbar('Success', 'Task added successfully');
+
+      // QUAY VỀ HOME – XÓA TOÀN BỘ STACK
+      Get.offAll(() => const HomePage());
+
     } catch (e) {
-      Get.snackbar('Error', e.toString());
+      Get.snackbar(
+        'Error',
+        e.toString(),
+        snackPosition: SnackPosition.TOP,
+      );
     }
   }
+
 
   IconData _getCategoryIcon(String category) {
     switch (category) {
@@ -171,20 +184,6 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
           ),
         ),
         centerTitle: true,
-        actions: [
-          if (!widget.isNewTask)
-            IconButton(
-              icon: Icon(
-                _isEditing ? Icons.check : Icons.edit,
-                color: Colors.green,
-              ),
-              onPressed: () {
-                setState(() {
-                  _isEditing = !_isEditing;
-                });
-              },
-            ),
-        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -194,34 +193,45 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
             // Category card với ảnh illustration
             Center(
               child: Container(
-                padding: const EdgeInsets.all(30),
+                padding: const EdgeInsets.fromLTRB(30, 30, 30, 24),
                 decoration: BoxDecoration(
-                  color: Colors.green.shade100,
-                  borderRadius: BorderRadius.circular(30),
+                  color: const Color(0xFF90CAF9), // cùng tone card
+                  borderRadius: BorderRadius.circular(32),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.18),
+                      blurRadius: 4,
+                      offset: const Offset(6, 10),
+                    ),
+                  ],
                 ),
                 child: Column(
                   children: [
+                    // ẢNH
                     Image.asset(
                       category['image'] as String,
-                      width: 100,
-                      height: 100,
+                      width: 110,
+                      height: 110,
                       fit: BoxFit.contain,
                       errorBuilder: (context, error, stackTrace) {
                         return Icon(
                           _getCategoryIcon(_selectedCategory),
-                          size: 80,
-                          color: category['color'] as Color,
+                          size: 90,
+                          color: Colors.white,
                         );
                       },
                     ),
-                    const SizedBox(height: 15),
+
+                    const SizedBox(height: 16),
+
+                    // CHIP CATEGORY
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
+                        horizontal: 22,
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: category['color'] as Color,
+                        color: Colors.white.withOpacity(0.25), // 👈 overlay nhẹ
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
@@ -237,6 +247,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                 ),
               ),
             ),
+
 
             const SizedBox(height: 30),
 
@@ -320,7 +331,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                 Expanded(
                   child: _buildInfoCard(
                     'Giờ bắt đầu',
-                    '${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')}',
+                    _formatTime12h(_selectedTime), // dùng format 12h
                     Icons.access_time,
                   ),
                 ),
@@ -342,7 +353,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
               child: ElevatedButton(
                 onPressed: _confirmTask,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
+                  backgroundColor: Colors.black,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),

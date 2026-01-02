@@ -8,6 +8,7 @@ import '../../services/statistics_service.dart';
 import '../../services/task_service.dart';
 import '../home/home_page.dart';
 import '../statistics/statistics_page.dart';
+import '../tasks/add_task_page.dart';
 import '../tasks/task_list_page.dart';
 import '../../services/auth_service.dart';
 import 'package:get/get.dart';
@@ -145,7 +146,7 @@ class _CalendarPageState extends State<CalendarPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => TaskListPage(userId: userId),
+                        builder: (_) => TaskListPage(),
                       ),
                     );
                   },
@@ -161,13 +162,21 @@ class _CalendarPageState extends State<CalendarPage> {
             // BIG PLUS BUTTON
             Expanded(
               child: Center(
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: const BoxDecoration(
-                    color: Colors.green,
-                    shape: BoxShape.circle,
+                child: InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const AddTaskPage()),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: const BoxDecoration(
+                      color: Colors.green,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.add, size: 24, color: Colors.white),
                   ),
-                  child: const Icon(Icons.add, size: 24, color: Colors.white),
                 ),
               ),
             ),

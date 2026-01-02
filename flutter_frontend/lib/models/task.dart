@@ -9,7 +9,7 @@ class Task {
   /// not-started | in-progress | done | failed
   final String status;
 
-  /// danh mục: work | study | personal | health | other
+  /// danh mục: work | study | health | relax | gardening | cook | meditation | other
   final String category;
 
   /// thời gian bắt đầu
@@ -80,16 +80,19 @@ class Task {
   // fromJson
   factory Task.fromJson(Map<String, dynamic> json) {
     return Task(
-      id: json['id'].toString(),
+      id: json['id'],
       userId: json['userId'],
       title: json['title'] ?? '',
       description: json['description'],
       status: json['status'] ?? 'not-started',
       category: json['category'] ?? 'other',
-      startTime: DateTime.parse(json['startTime']),
-      duration: Duration(minutes: json['durationMinutes']),
+
+      startTime: (json['startTime'] as Timestamp).toDate(),
+
+      duration: Duration(minutes: json['durationMinutes'] ?? 0),
+
       deadline: json['deadline'] != null
-          ? DateTime.parse(json['deadline'])
+          ? (json['deadline'] as Timestamp).toDate()
           : null,
     );
   }
@@ -120,9 +123,12 @@ class Task {
       'description': description,
       'status': status,
       'category': category,
-      'startTime': startTime.toIso8601String(),
+
+      'startTime': Timestamp.fromDate(startTime),
       'durationMinutes': duration.inMinutes,
-      'deadline': deadline?.toIso8601String(),
+      'deadline': deadline != null
+          ? Timestamp.fromDate(deadline!)
+          : null,
     };
   }
 

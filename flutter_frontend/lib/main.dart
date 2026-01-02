@@ -3,6 +3,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+import 'controllers/task_controller.dart';
 import 'views/auth/login_page.dart';
 import 'firebase_options.dart';
 
@@ -31,7 +32,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    Get.put(TaskController());
+
+    return GetMaterialApp(
       debugShowCheckedModeBanner: false,
 
       // THÊM LOCALIZATION DELEGATES

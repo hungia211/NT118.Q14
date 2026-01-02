@@ -10,6 +10,12 @@ class TaskController extends GetxController {
 
   final RxList<Task> tasks = <Task>[].obs;
   final RxBool isLoading = false.obs;
+  final Rxn<Task> nextTask = Rxn<Task>();
+
+  // Sắp xếp tasks theo startTime
+  void _sortTasksByStartTime() {
+    tasks.sort((a, b) => a.startTime.compareTo(b.startTime));
+  }
 
   final RxMap<String, double> dailyProgress = <String, double>{}.obs;
 
@@ -31,7 +37,7 @@ class TaskController extends GetxController {
         userId: user!.uid,
         title: title,
         description: description,
-        status: 'todo', // mặc định
+        status: 'not-started', // mặc định
         category: category,
         startTime: startTime,
         duration: duration,
@@ -48,29 +54,75 @@ class TaskController extends GetxController {
     }
   }
 
-  /// Lấy tất cả task theo userId
+  // Lấy tất cả task theo userId
   Future<void> loadTasksByUser(String userId) async {
     try {
-      print('Loading tasks for userId: $userId'); // debug
       isLoading.value = true;
+
       final result = await _taskService.getTasksByUser(userId);
-      print('Found ${result.length} tasks');
+
       tasks.assignAll(result);
-      tasks.refresh();
+      _sortTasksByStartTime();
     } catch (e) {
       Get.snackbar('Error', e.toString());
-      print('Error: $e');
     } finally {
       isLoading.value = false;
     }
   }
+
+  // Lấy task hôm nay theo userId
+  Future<void> loadTodayTasks() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    try {
+      isLoading.value = true;
+      final result = await _taskService.getTodayTasksByUser(user.uid);
+      tasks.assignAll(result);
+      _sortTasksByStartTime();
+    } catch (e) {
+      Get.snackbar('Error', e.toString());
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // Lấy task sắp diễn ra nhất cho Home Page
+  Future<void> loadNextTaskForHome() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    try {
+      final task = await _taskService.getNextTaskForUser(user.uid);
+      nextTask.value = task; // có thể null
+    } catch (e) {
+      Get.snackbar('Error', e.toString());
+    }
+  }
+
+  /// Tính tiến độ công việc hôm nay (0.00 → 1.00)
+  double calculateTodayProgress() {
+    final todayTasks = filterTasksForToday(tasks);
+
+    if (todayTasks.isEmpty) return 0.0;
+
+    final completedCount =
+        todayTasks.where((task) => task.status == 'done').length;
+
+    final progress = completedCount / todayTasks.length;
+
+    // làm tròn 2 chữ số thập phân~
+    return double.parse(progress.toStringAsFixed(2));
+  }
+
 
   // Xóa task
   Future<void> deleteTask(int index) async {
     final task = tasks[index];
     try {
       await _taskService.deleteTask(task.id); // xóa DB
-      tasks.removeAt(index); // xóa local state
+      tasks.removeAt(index);
+      _sortTasksByStartTime();
     } catch (e) {
       Get.snackbar("Lỗi", "Không thể xóa công việc");
     }
@@ -81,6 +133,8 @@ class TaskController extends GetxController {
     try {
       await _taskService.updateTask(updatedTask); // update DB
       tasks[index] = updatedTask; // update local state
+      _sortTasksByStartTime();
+      tasks.refresh();
     } catch (e) {
       Get.snackbar("Lỗi", "Không thể cập nhật công việc");
     }

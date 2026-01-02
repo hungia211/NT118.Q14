@@ -206,7 +206,6 @@ class _EditTaskBottomSheetState extends State<EditTaskBottomSheet> {
                 children: [
                   _categoryChip('work', 'Công việc'),
                   _categoryChip('study', 'Học tập'),
-                  _categoryChip('personal', 'Cá nhân'),
                   _categoryChip('health', 'Sức khỏe'),
                   _categoryChip('relax', 'Nghỉ ngơi'),
                   _categoryChip('cook', 'Công việc nhà'),
