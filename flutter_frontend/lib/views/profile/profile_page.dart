@@ -422,7 +422,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 if (uid == null) return;
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => TaskListPage(userId: uid)),
+                  MaterialPageRoute(builder: (_) => TaskListPage()),
                 );
               },
               child: const Icon(Icons.grid_view, size: 30),

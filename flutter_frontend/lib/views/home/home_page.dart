@@ -19,6 +19,11 @@ import '../../services/user_service.dart';
 import 'package:get/get.dart';
 import '../../services/auth_service.dart';
 
+import '../../controllers/pomodoro_controller.dart';
+import '../../services/pomodoro_overlay.dart';
+import '../focus/pomodoro_page.dart';
+
+
 // import '../../services/auth_service.dart';
 
 class HomePage extends StatefulWidget {
@@ -30,9 +35,13 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final TaskService taskService = TaskService();
-  final TaskController taskController = TaskController();
+  final TaskController taskController = Get.find<TaskController>();
   final BookService bookService = BookService();
   final UserService userService = UserService();
+
+  final PomodoroController pomodoroController =
+  Get.put(PomodoroController());
+
 
   late final AuthService authService;
   late final String userId;
@@ -62,6 +71,10 @@ class _HomePageState extends State<HomePage> {
       return;
     }
 
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      taskController.loadNextTaskForHome();
+    });
+
     userId = uid;
     _loadUser();
   }
@@ -78,7 +91,6 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    double progress = 0.5; // 50%
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9FEFB),
@@ -127,15 +139,10 @@ class _HomePageState extends State<HomePage> {
               child: Center(
                 child: InkWell(
                   onTap: () async {
-                    final tasks = await _tasksFuture;
-                    final todayTasks = taskController.filterTasksForToday(
-                      tasks,
-                    );
-
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => TaskListPage(userId: userId),
+                        builder: (_) => TaskListPage(),
                       ),
                     );
                   },
@@ -225,26 +232,7 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   const Icon(Icons.notifications, size: 36),
                   const SizedBox(width: 16), // ← thêm padding trái cho Search
-                  Expanded(
-                    child: Container(
-                      height: 40,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Row(
-                        children: [
-                          Icon(Icons.search, color: Colors.grey),
-                          SizedBox(width: 8),
-                          Text(
-                            "Tìm kiếm",
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+
 
                   const SizedBox(
                     width: 16,
@@ -298,50 +286,88 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 30),
 
               // TASK CARD
-              FutureBuilder<List<Task>>(
-                future: _tasksFuture,
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
+            Obx(() {
+              final task = taskController.nextTask.value;
 
-                  final tasks = snapshot.data!;
-                  final todayTasks = taskController.filterTasksForToday(tasks);
+              if (task == null) {
+                return const Text("Không có công việc sắp tới 😴");
+              }
 
-                  final currentTask = taskController.getCurrentTask(todayTasks);
-                  final nextTask = taskController.getNextTask(todayTasks);
+              return Column(
+                children: [
+                  LayeredTaskCard(context, task),
+                  const SizedBox(height: 15),
+                  BlackButton(
+                    text: "XEM TẤT CẢ",
+                    width: 130,
+                    height: 40,
+                    fontSize: 12,
+                    borderRadius: 40,
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => TaskListPage(),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              );
+            }),
 
-                  // Task hiển thị trên Home
-                  final displayTask = currentTask ?? nextTask;
 
-                  if (displayTask == null) {
-                    return const Text("Không có công việc hôm nay 😴");
-                  }
+              const SizedBox(height: 30),
 
-                  return Column(
-                    children: [
-                      LayeredTaskCard(context, displayTask),
+              GestureDetector(
+                onTap: () {
+                  pomodoroController.start();
 
-                      const SizedBox(height: 15),
-
-                      BlackButton(
-                        text: "XEM TẤT CẢ",
-                        width: 130,
-                        height: 40,
-                        fontSize: 12,
-                        borderRadius: 40,
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => TaskListPage(userId: userId),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
+                  PomodoroOverlay.show(
+                    onTap: () {
+                      Get.to(() => PomodoroPage());
+                      PomodoroOverlay.hide();
+                    },
+                    onClose: () {
+                      pomodoroController.stop();
+                      PomodoroOverlay.hide();
+                    },
                   );
                 },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.redAccent.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.08),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: const [
+                          Icon(Icons.timer, color: Colors.redAccent, size: 28),
+                          SizedBox(width: 12),
+                          Text(
+                            "Bắt đầu Pomodoro",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Icon(Icons.play_arrow, color: Colors.redAccent),
+                    ],
+                  ),
+                ),
               ),
 
               const SizedBox(height: 30),
@@ -362,9 +388,12 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 10),
 
               // CUSTOM PROGRESS BAR
-              LayoutBuilder(
+            Obx(() {
+              final progress = taskController.calculateTodayProgress();
+
+              return LayoutBuilder(
                 builder: (context, constraints) {
-                  final fullWidth = constraints.maxWidth; // chiều rộng thật
+                  final fullWidth = constraints.maxWidth;
                   final progressWidth = fullWidth * progress;
 
                   return Stack(
@@ -401,7 +430,7 @@ class _HomePageState extends State<HomePage> {
 
                       // Text %
                       Text(
-                        "${(progress * 100).toInt()}%",
+                        "${(progress * 100).toStringAsFixed(0)}%",
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -411,9 +440,10 @@ class _HomePageState extends State<HomePage> {
                     ],
                   );
                 },
-              ),
+              );
+            }),
 
-              const SizedBox(height: 60),
+            const SizedBox(height: 60),
 
               // DISCOVER BANNER
               Stack(
