@@ -24,7 +24,7 @@ class _CalendarPageState extends State<CalendarPage> {
   final taskService = TaskService();
   final statisticsService = StatisticsService();
   final controller = StatisticsController();
-  final taskController = TaskController();
+  final TaskController taskController = Get.find<TaskController>();
 
   late final AuthService authService;
   late final String userId;
@@ -49,18 +49,16 @@ class _CalendarPageState extends State<CalendarPage> {
   }
 
   Future<void> _loadTasks() async {
-    final allTasks = await taskService.getTasks();
+    final allTasks = await taskService.getTasksByUser(userId);
+
     setState(() {
-      _tasks =
-          allTasks
-              .where(
-                (t) =>
-                    t.startTime.year == _selectedDay.year &&
-                    t.startTime.month == _selectedDay.month &&
-                    t.startTime.day == _selectedDay.day,
-              )
-              .toList()
-            ..sort((a, b) => a.startTime.compareTo(b.startTime));
+      _tasks = allTasks
+          .where((t) =>
+      t.startTime.year == _selectedDay.year &&
+          t.startTime.month == _selectedDay.month &&
+          t.startTime.day == _selectedDay.day)
+          .toList()
+        ..sort((a, b) => a.startTime.compareTo(b.startTime));
     });
   }
 

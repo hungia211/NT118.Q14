@@ -27,7 +27,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
   late final String userId;
 
   // Đăng ký controller nếu chưa có
-  final TaskController controller = Get.put(TaskController());
   final taskController = Get.find<TaskController>();
 
   // Thêm 2 dòng này
@@ -87,16 +86,16 @@ class _AddTaskPageState extends State<AddTaskPage> {
     },
   };
 
-  final List<String> _allTasks = [
+  final fallback = [
     'Viết code',
-    'Họp nhóm',
+    'Học Flutter',
     'Đọc sách',
     'Tập thể dục',
     'Nấu ăn',
-    'Học Flutter',
-    'Thiết kế UI',
-    'Xem phim',
-    'Nghỉ ngơi',
+    'Đi dạo',
+    'Thiền',
+    'Làm vườn',
+    'Họp nhóm',
     'Làm bài tập',
   ];
 
@@ -109,22 +108,30 @@ class _AddTaskPageState extends State<AddTaskPage> {
     if (uid == null) return;
 
     userId = uid;
+
+    taskController.loadTaskTitleSuggestions();
   }
 
   int _currentStep = 0;
 
   void _searchTasks(String query) {
+    final allTitles = taskController.taskTitleSuggestions.isEmpty
+        ? fallback
+        : taskController.taskTitleSuggestions;
+
     setState(() {
       if (query.isEmpty) {
         _suggestions.clear();
         _showSuggestions = false;
       } else {
-        _suggestions.clear();
-        _suggestions.addAll(
-          _allTasks
-              .where((task) => task.toLowerCase().contains(query.toLowerCase()))
-              .toList(),
-        );
+        _suggestions
+          ..clear()
+          ..addAll(
+            allTitles.where(
+              (title) => title.toLowerCase().contains(query.toLowerCase()),
+            ),
+          );
+
         _showSuggestions = _suggestions.isNotEmpty;
       }
     });
@@ -237,9 +244,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
 
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => TaskListPage(),
-                      ),
+                      MaterialPageRoute(builder: (_) => TaskListPage()),
                     );
                   },
                   child: const Icon(
@@ -684,18 +689,14 @@ class _AddTaskPageState extends State<AddTaskPage> {
                       _buildTimeBox(amPm),
                     ],
                   ),
-
                 ),
                 const SizedBox(height: 10),
 
                 _buildCategoryCardWithTitle(),
-
               ],
             ),
           ),
         ),
-
-
 
         Padding(
           padding: const EdgeInsets.all(20),
@@ -727,10 +728,8 @@ class _AddTaskPageState extends State<AddTaskPage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => TaskDetailPage(
-                      task: newTask,
-                      isNewTask: true,
-                    ),
+                    builder: (_) =>
+                        TaskDetailPage(task: newTask, isNewTask: true),
                   ),
                 );
               },
@@ -900,10 +899,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
       ),
     );
   }
-
-
-
-
 
   IconData _getCategoryIcon(String category) {
     switch (category) {

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:todo_app/services/notification_service.dart';
 
+import 'controllers/notification_controller.dart';
 import 'controllers/task_controller.dart';
 import 'views/auth/login_page.dart';
 import 'firebase_options.dart';
@@ -17,12 +19,17 @@ void main() async {
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await initializeDateFormatting('vi_VN', null);
+  await NotificationService.init();
+
 
   // đăng ký AuthService với GetX
   Get.put(AuthService());
+  Get.put(NotificationController());
+  Get.put(TaskController());
 
   // Chạy .env khi app start
   await dotenv.load(fileName: ".env");
+
 
   runApp(const MyApp());
 }
@@ -32,7 +39,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Get.put(TaskController());
 
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,

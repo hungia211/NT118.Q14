@@ -470,7 +470,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
                 child: const Text(
-                  'Xem lịch sử',
+                  'Xem tiến độ công việc',
                   style: TextStyle(fontWeight: FontWeight.w600),
                 ),
               ),
