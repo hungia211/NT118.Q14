@@ -5,10 +5,6 @@ class TaskService {
   final _db = FirebaseFirestore.instance;
   final _taskRef = FirebaseFirestore.instance.collection('tasks');
 
-  // ============================================
-  // PUBLIC FUNCTION — dùng để gọi ở Controller/UI
-  // ============================================
-
   // API lấy danh sách tasks
   Future<List<Task>> getTasks() async {
     try {
@@ -127,7 +123,19 @@ class TaskService {
     );
   }
 
+  // API lấy danh sách title task (không trùng)
+  Future<List<String>> getTaskTitlesByUser(String userId) async {
+    final snapshot = await _db
+        .collection('tasks')
+        .where('userId', isEqualTo: userId)
+        .get();
 
+    return snapshot.docs
+        .map((doc) => doc.data()['title'] as String)
+        .where((title) => title.trim().isNotEmpty)
+        .toSet() // loại bỏ trùng
+        .toList();
+  }
 
 
   // API xóa task

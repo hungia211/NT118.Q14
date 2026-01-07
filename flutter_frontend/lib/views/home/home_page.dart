@@ -22,9 +22,11 @@ import '../../services/auth_service.dart';
 import '../../controllers/pomodoro_controller.dart';
 import '../../services/pomodoro_overlay.dart';
 import '../focus/pomodoro_page.dart';
+import '../notifications/notification_page.dart';
+import '../../controllers/notification_controller.dart';
 
 
-// import '../../services/auth_service.dart';
+
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -41,6 +43,10 @@ class _HomePageState extends State<HomePage> {
 
   final PomodoroController pomodoroController =
   Get.put(PomodoroController());
+
+  final NotificationController notiController =
+  Get.find<NotificationController>();
+
 
 
   late final AuthService authService;
@@ -73,6 +79,7 @@ class _HomePageState extends State<HomePage> {
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      taskController.loadTodayTasks();
       taskController.loadNextTaskForHome();
     });
 
@@ -89,7 +96,6 @@ class _HomePageState extends State<HomePage> {
       userName = data?['name'];
       avatarUrl = data?['avatar_url'];
     });
-    print("HOME AVATAR URL = $avatarUrl");
   }
 
   @override
@@ -233,7 +239,39 @@ class _HomePageState extends State<HomePage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Icon(Icons.notifications, size: 36),
+                  GestureDetector(
+                    onTap: () {
+                      notiController.markAllAsRead();
+                      Get.to(() => NotificationPage());
+                    },
+                    child: Obx(() {
+                      return SizedBox(
+                        width: 36,
+                        height: 36,
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            const Icon(Icons.notifications, size: 36),
+                            if (notiController.hasUnread.value)
+                              Positioned(
+                                right: 2,
+                                top: 2,
+                                child: Container(
+                                  width: 10,
+                                  height: 10,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.red,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      );
+                    }),
+                  ),
+
+
                   const SizedBox(width: 16), // ← thêm padding trái cho Search
 
 
@@ -396,7 +434,7 @@ class _HomePageState extends State<HomePage> {
 
               // CUSTOM PROGRESS BAR
             Obx(() {
-              final progress = taskController.calculateTodayProgress();
+              final progress = taskController.todayProgress.value;
 
               return LayoutBuilder(
                 builder: (context, constraints) {

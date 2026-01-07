@@ -1,8 +1,14 @@
+import 'package:flutter/cupertino.dart';
+
+import '../models/app_notification.dart';
 import '../models/task.dart';
 import 'package:get/get.dart';
+import '../services/notification_service.dart';
 import '../services/task_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+
+import 'notification_controller.dart';
 
 class TaskController extends GetxController {
   final TaskService _taskService = TaskService();
@@ -11,6 +17,16 @@ class TaskController extends GetxController {
   final RxList<Task> tasks = <Task>[].obs;
   final RxBool isLoading = false.obs;
   final Rxn<Task> nextTask = Rxn<Task>();
+
+  // Danh sách gợi ý title cho AddTask
+  final RxList<String> taskTitleSuggestions = <String>[].obs;
+  final RxBool isLoadingTitleSuggestions = false.obs;
+  final RxBool hasUnreadNotification = false.obs;
+  final NotificationController notiController =
+  Get.find<NotificationController>();
+
+  final RxDouble todayProgress = 0.0.obs;
+
 
   // Sắp xếp tasks theo startTime
   void _sortTasksByStartTime() {
@@ -45,8 +61,25 @@ class TaskController extends GetxController {
 
       await _taskService.addTask(task);
 
+      final now = DateTime.now();
+
+      if (task.startTime.isAfter(now)) {
+        final notificationId = task.id.hashCode;
+
+        await NotificationService.scheduleTaskNotification(
+          id: notificationId,
+          title: 'Đến giờ rồi!',
+          body: task.title,
+          scheduledTime: task.startTime,
+        );
+
+      } else {
+        debugPrint(
+          '⚠️ Không schedule notification vì startTime đã qua',
+        );
+      }
+
       Get.back();
-      Get.snackbar('Success', 'Task added');
     } catch (e) {
       Get.snackbar('Error', e.toString());
     } finally {
@@ -80,6 +113,31 @@ class TaskController extends GetxController {
       final result = await _taskService.getTodayTasksByUser(user.uid);
       tasks.assignAll(result);
       _sortTasksByStartTime();
+      updateTodayProgress();
+      for (final task in result) {
+        if (task.startTime.isAfter(DateTime.now())) {
+          final id =
+          task.startTime.millisecondsSinceEpoch.remainder(100000);
+
+          await NotificationService.scheduleTaskNotification(
+            id: id,
+            title: 'Đến giờ rồi!',
+            body: task.title,
+            scheduledTime: task.startTime,
+          );
+
+          if (!notiController.notifications.any((n) => n.id == task.id)) {
+            notiController.addNotification(
+              AppNotification(
+                id: task.id,
+                title: 'Đến giờ rồi!',
+                message: task.title,
+                time: task.startTime,
+              ),
+            );
+          }
+        }
+      }
     } catch (e) {
       Get.snackbar('Error', e.toString());
     } finally {
@@ -95,6 +153,7 @@ class TaskController extends GetxController {
     try {
       final task = await _taskService.getNextTaskForUser(user.uid);
       nextTask.value = task; // có thể null
+      updateTodayProgress();
     } catch (e) {
       Get.snackbar('Error', e.toString());
     }
@@ -215,6 +274,26 @@ class TaskController extends GetxController {
     }).toList();
   }
 
+  // Lấy gợi ý title cho Add Task
+  Future<void> loadTaskTitleSuggestions() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    try {
+      isLoadingTitleSuggestions.value = true;
+
+      final titles =
+      await _taskService.getTaskTitlesByUser(user.uid);
+
+      taskTitleSuggestions.assignAll(titles);
+    } catch (e) {
+      Get.snackbar('Error', 'Không thể tải gợi ý công việc');
+    } finally {
+      isLoadingTitleSuggestions.value = false;
+    }
+  }
+
+
   // Thống kê theo ngày
   Future<void> loadDailyProgress(String userId) async {
     isLoading.value = true;
@@ -242,4 +321,21 @@ class TaskController extends GetxController {
     dailyProgress.value = result;
     isLoading.value = false;
   }
+
+  // Cập nhật tiến độ công việc hôm nay
+  void updateTodayProgress() {
+    final todayTasks = filterTasksForToday(tasks);
+
+    if (todayTasks.isEmpty) {
+      todayProgress.value = 0.0;
+      return;
+    }
+
+    final completed =
+        todayTasks.where((task) => task.status == 'done').length;
+
+    todayProgress.value =
+        double.parse((completed / todayTasks.length).toStringAsFixed(2));
+  }
+
 }
