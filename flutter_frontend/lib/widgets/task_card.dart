@@ -79,7 +79,7 @@ class TaskCard extends StatelessWidget {
                 Text(
                   task.title,
                   style: const TextStyle(
-                    fontSize: 22,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),

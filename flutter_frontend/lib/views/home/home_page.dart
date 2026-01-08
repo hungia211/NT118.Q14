@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/task.dart';
+import '../../services/ai_suggestion_service.dart';
 import '../../widgets/black_button.dart';
 import '../../widgets/task_card.dart';
 import '../../controllers/task_controller.dart';
@@ -9,6 +10,7 @@ import '../../services/book_service.dart';
 import '../../widgets/book_card.dart';
 import 'package:rxdart/rxdart.dart';
 
+import '../ai/ai_preview_page.dart';
 import '../calendar/calendar_page.dart';
 import '../profile/profile_page.dart';
 import '../statistics/statistics_page.dart';
@@ -25,9 +27,6 @@ import '../focus/pomodoro_page.dart';
 import '../notifications/notification_page.dart';
 import '../../controllers/notification_controller.dart';
 
-
-
-
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -41,13 +40,10 @@ class _HomePageState extends State<HomePage> {
   final BookService bookService = BookService();
   final UserService userService = UserService();
 
-  final PomodoroController pomodoroController =
-  Get.put(PomodoroController());
+  final PomodoroController pomodoroController = Get.put(PomodoroController());
 
   final NotificationController notiController =
-  Get.find<NotificationController>();
-
-
+      Get.find<NotificationController>();
 
   late final AuthService authService;
   late final String userId;
@@ -100,7 +96,6 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       backgroundColor: const Color(0xFFF9FEFB),
 
@@ -150,9 +145,7 @@ class _HomePageState extends State<HomePage> {
                   onTap: () async {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => TaskListPage(),
-                      ),
+                      MaterialPageRoute(builder: (_) => TaskListPage()),
                     );
                   },
                   child: const Icon(Icons.grid_view, size: 28),
@@ -271,9 +264,7 @@ class _HomePageState extends State<HomePage> {
                     }),
                   ),
 
-
                   const SizedBox(width: 16), // ← thêm padding trái cho Search
-
 
                   const SizedBox(
                     width: 16,
@@ -331,36 +322,33 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 30),
 
               // TASK CARD
-            Obx(() {
-              final task = taskController.nextTask.value;
+              Obx(() {
+                final task = taskController.nextTask.value;
 
-              if (task == null) {
-                return const Text("Không có công việc sắp tới 😴");
-              }
+                if (task == null) {
+                  return const Text("Không có công việc sắp tới 😴");
+                }
 
-              return Column(
-                children: [
-                  LayeredTaskCard(context, task),
-                  const SizedBox(height: 15),
-                  BlackButton(
-                    text: "XEM TẤT CẢ",
-                    width: 130,
-                    height: 40,
-                    fontSize: 12,
-                    borderRadius: 40,
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => TaskListPage(),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              );
-            }),
-
+                return Column(
+                  children: [
+                    LayeredTaskCard(context, task),
+                    const SizedBox(height: 15),
+                    BlackButton(
+                      text: "XEM TẤT CẢ",
+                      width: 130,
+                      height: 40,
+                      fontSize: 12,
+                      borderRadius: 40,
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => TaskListPage()),
+                        );
+                      },
+                    ),
+                  ],
+                );
+              }),
 
               const SizedBox(height: 30),
 
@@ -433,62 +421,62 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 10),
 
               // CUSTOM PROGRESS BAR
-            Obx(() {
-              final progress = taskController.todayProgress.value;
+              Obx(() {
+                final progress = taskController.todayProgress.value;
 
-              return LayoutBuilder(
-                builder: (context, constraints) {
-                  final fullWidth = constraints.maxWidth;
-                  final progressWidth = fullWidth * progress;
+                return LayoutBuilder(
+                  builder: (context, constraints) {
+                    final fullWidth = constraints.maxWidth;
+                    final progressWidth = fullWidth * progress;
 
-                  return Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      // Nền xám
-                      Container(
-                        height: 28,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade300,
-                          borderRadius: BorderRadius.circular(30),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.15),
-                              blurRadius: 10,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      // Thanh xanh
-                      Positioned(
-                        left: 0,
-                        child: Container(
+                    return Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // Nền xám
+                        Container(
                           height: 28,
-                          width: progressWidth,
                           decoration: BoxDecoration(
-                            color: Colors.green,
+                            color: Colors.grey.shade300,
                             borderRadius: BorderRadius.circular(30),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.15),
+                                blurRadius: 10,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
                           ),
                         ),
-                      ),
 
-                      // Text %
-                      Text(
-                        "${(progress * 100).toStringAsFixed(0)}%",
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
+                        // Thanh xanh
+                        Positioned(
+                          left: 0,
+                          child: Container(
+                            height: 28,
+                            width: progressWidth,
+                            decoration: BoxDecoration(
+                              color: Colors.green,
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
-                  );
-                },
-              );
-            }),
 
-            const SizedBox(height: 60),
+                        // Text %
+                        Text(
+                          "${(progress * 100).toStringAsFixed(0)}%",
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              }),
+
+              const SizedBox(height: 60),
 
               // DISCOVER BANNER
               Stack(
@@ -530,7 +518,24 @@ class _HomePageState extends State<HomePage> {
 
                         // BUTTON
                         ElevatedButton(
-                          onPressed: () {},
+                          onPressed: () async {
+                            final controller = Get.find<TaskController>();
+
+                            Get.dialog(
+                              const Center(child: CircularProgressIndicator()),
+                              barrierDismissible: false,
+                            );
+
+                            try {
+                              final drafts = await controller.generateAiTasks();
+
+                              Get.back();
+                              Get.to(() => AiPreviewPage(tasks: drafts));
+                            } catch (e) {
+                              Get.back();
+                              Get.snackbar('Error', e.toString());
+                            }
+                          },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.black,
                             foregroundColor: Colors.white,

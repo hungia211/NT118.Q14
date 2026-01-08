@@ -3,6 +3,8 @@ import 'package:flutter/cupertino.dart';
 import '../models/app_notification.dart';
 import '../models/task.dart';
 import 'package:get/get.dart';
+import '../models/task_draft.dart';
+import '../services/ai_suggestion_service.dart';
 import '../services/notification_service.dart';
 import '../services/task_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -23,9 +25,11 @@ class TaskController extends GetxController {
   final RxBool isLoadingTitleSuggestions = false.obs;
   final RxBool hasUnreadNotification = false.obs;
   final NotificationController notiController =
-  Get.find<NotificationController>();
+      Get.find<NotificationController>();
 
   final RxDouble todayProgress = 0.0.obs;
+
+  final AiSuggestionService _aiService = AiSuggestionService();
 
 
   // Sắp xếp tasks theo startTime
@@ -72,11 +76,8 @@ class TaskController extends GetxController {
           body: task.title,
           scheduledTime: task.startTime,
         );
-
       } else {
-        debugPrint(
-          '⚠️ Không schedule notification vì startTime đã qua',
-        );
+        debugPrint('⚠️ Không schedule notification vì startTime đã qua');
       }
 
       Get.back();
@@ -116,8 +117,7 @@ class TaskController extends GetxController {
       updateTodayProgress();
       for (final task in result) {
         if (task.startTime.isAfter(DateTime.now())) {
-          final id =
-          task.startTime.millisecondsSinceEpoch.remainder(100000);
+          final id = task.startTime.millisecondsSinceEpoch.remainder(100000);
 
           await NotificationService.scheduleTaskNotification(
             id: id,
@@ -165,15 +165,15 @@ class TaskController extends GetxController {
 
     if (todayTasks.isEmpty) return 0.0;
 
-    final completedCount =
-        todayTasks.where((task) => task.status == 'done').length;
+    final completedCount = todayTasks
+        .where((task) => task.status == 'done')
+        .length;
 
     final progress = completedCount / todayTasks.length;
 
     // làm tròn 2 chữ số thập phân~
     return double.parse(progress.toStringAsFixed(2));
   }
-
 
   // Xóa task
   Future<void> deleteTask(int index) async {
@@ -282,8 +282,7 @@ class TaskController extends GetxController {
     try {
       isLoadingTitleSuggestions.value = true;
 
-      final titles =
-      await _taskService.getTaskTitlesByUser(user.uid);
+      final titles = await _taskService.getTaskTitlesByUser(user.uid);
 
       taskTitleSuggestions.assignAll(titles);
     } catch (e) {
@@ -292,7 +291,6 @@ class TaskController extends GetxController {
       isLoadingTitleSuggestions.value = false;
     }
   }
-
 
   // Thống kê theo ngày
   Future<void> loadDailyProgress(String userId) async {
@@ -331,11 +329,71 @@ class TaskController extends GetxController {
       return;
     }
 
-    final completed =
-        todayTasks.where((task) => task.status == 'done').length;
+    final completed = todayTasks.where((task) => task.status == 'done').length;
 
-    todayProgress.value =
-        double.parse((completed / todayTasks.length).toStringAsFixed(2));
+    todayProgress.value = double.parse(
+      (completed / todayTasks.length).toStringAsFixed(2),
+    );
   }
 
+  // Xây dựng prompt từ lịch sử task 5 ngày gần nhất
+  Future<String> buildPromptFromLast5Days() async {
+    final user = FirebaseAuth.instance.currentUser!;
+    // Giả sử bạn lấy được tasks
+    final tasks = await _taskService.getTasksByUser(user.uid);
+
+    final now = DateTime.now();
+    final fiveDaysAgo = now.subtract(const Duration(days: 5));
+
+    final recentTasks = tasks
+        .where((t) => t.startTime.isAfter(fiveDaysAgo))
+        .toList();
+
+    final buffer = StringBuffer();
+
+    // 1. CUNG CẤP NGÀY HIỆN TẠI (Quan trọng)
+    buffer.writeln('Today represents: ${now.toIso8601String()}.');
+    buffer.writeln('You are an AI assistant that helps plan daily tasks for a Vietnamese student.');
+    buffer.writeln('Here is the task history of the last 5 days to understand user habits:');
+
+    for (final t in recentTasks) {
+      // Chỉ cần gửi giờ, không cần gửi phút chi tiết nếu không cần thiết để tiết kiệm token
+      buffer.writeln(
+        '- ${t.title} [${t.category}]: ${t.startTime.hour}:${t.startTime.minute.toString().padLeft(2, '0')}, duration: ${t.duration.inMinutes}m',
+      );
+    }
+
+    buffer.writeln('''
+      Suggest a task plan for TOMORROW.
+      
+      IMPORTANT RULES:
+      1. Task titles MUST be written in Vietnamese.
+      2. Categories MUST be one of: work, study, health, relax, gardening, cook, meditation, other.
+      3. Return ONLY a valid JSON array.
+      4. "startTime" must be in "HH:mm" format (24-hour clock). DO NOT return full date.
+      
+      JSON format example:
+      [
+        {
+          "title": "Ôn tập lập trình Mobile",
+          "category": "study",
+          "startTime": "08:00", 
+          "durationMinutes": 60
+        }
+      ]
+    ''');
+
+    return buffer.toString();
+  }
+
+  Future<List<TaskDraft>> generateAiTasks() async {
+    try {
+      final prompt = await buildPromptFromLast5Days();
+      final drafts = await _aiService.suggestTasks(prompt);
+      drafts.sort((a, b) => a.startTime.compareTo(b.startTime));
+      return drafts;
+    } catch (e) {
+      rethrow;
+    }
+  }
 }
