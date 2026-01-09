@@ -136,23 +136,12 @@ class _CalendarPageState extends State<CalendarPage> {
               child: Center(
                 child: InkWell(
                   onTap: () async {
-                    final tasks = await taskService.getTasks();
-                    final todayTasks = taskController.filterTasksForToday(
-                      tasks,
-                    );
-
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => TaskListPage(),
-                      ),
+                      MaterialPageRoute(builder: (_) => TaskListPage()),
                     );
                   },
-                  child: const Icon(
-                    Icons.grid_view,
-                    size: 30,
-                    color: Colors.black,
-                  ),
+                  child: const Icon(Icons.grid_view, size: 28),
                 ),
               ),
             ),

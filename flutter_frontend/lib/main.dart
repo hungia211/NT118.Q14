@@ -17,19 +17,24 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // LOAD ENV TRƯỚC (RẤT QUAN TRỌNG)
+  await dotenv.load(fileName: ".env");
+
+  // INIT FIREBASE
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  // LOCALIZATION
   await initializeDateFormatting('vi_VN', null);
+
+  // NOTIFICATION
   await NotificationService.init();
 
-
-  // đăng ký AuthService với GetX
+  // GETX DEPENDENCIES
   Get.put(AuthService());
   Get.put(NotificationController());
   Get.put(TaskController());
-
-  // Chạy .env khi app start
-  await dotenv.load(fileName: ".env");
-
 
   runApp(const MyApp());
 }
